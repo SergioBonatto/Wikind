@@ -1,0 +1,19 @@
+Arvore (n: Nat) (m: Nat) (o: Nat) : String
+Arvore n m Nat.zero       = String.concat " " " "     
+Arvore n m (Nat.succ o)              = 
+(String.concat ( String.repeat "\x1b[8m. \x1b[0m" ( Nat.add(Nat.div o (U60.to_nat 2)) (U60.to_nat 2))) 
+  (Bool.if ( Nat.equal n m ) (String.concat (String.repeat " " (Nat.sub m (U60.to_nat 5))) "   |_| \x1b[34m
+       FELIZ NATAL \x1b[0m") 
+  (String.concat (
+    Bool.if (Nat.is_odd m)   
+      (String.concat ""(String.repeat "\x1b[32m*\x1b[0m " m))
+      (String.concat " "(String.repeat "\x1b[32m*\x1b[0m\x1b[31m°\x1b[0m\x1b[32m*\x1b[0m " (Nat.div m (U60.to_nat 2)))))
+  (String.concat "\n" (Arvore n (Nat.succ m) o)))))
+
+Natal : String
+Natal = (Arvore (U60.to_nat 9) Nat.zero (U60.to_nat 10))
+
+Main {
+Natal
+}
+
