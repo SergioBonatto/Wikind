@@ -1,0 +1,39 @@
+Fro_mult_0_3 (n: Nat) (m: Nat) (p: Nat) (e: Either (Equal n Nat.zero) (Either (Equal m Nat.zero) (Equal p Nat.zero))) : (Equal (Nat.mul n (Nat.mul m p)) Nat.zero )
+Fro_mult_0_3 Nat.zero m         p (Either.left Equal.refl)  = Equal.refl
+Fro_mult_0_3 n        Nat.zero  p (Either.right Equal.refl) = Mult_0_r n
+Fro_mult_0_3 n        m         Nat.zero (Either.right Equal.refl) = 
+  let mult_0_r_m = Mult_0_r m
+  let mult_0_r_n = Mult_0_r n
+  let rwt = Equal.rewrite (Equal.mirror mult_0_r_m) (x => (Equal Nat (Nat.mul n x) 0n)) mult_0_r_n
+  rwt
+Fro_mult_0_3 (Nat.succ n) m p (Either.left e) =
+  let emp = (Equal.rewrite e 
+    (x => match Nat x {
+      zero => Empty
+      succ => Unit
+    })
+    (Unit.new))
+  Empty.absurd emp
+Fro_mult_0_3 n (Nat.succ m) p (Either.right (Either.right l (Equal p Nat.zero) val)) =
+  let mult_0_r_n = Mult_0_r n
+  let mult_m_p_eq_0 = Mult_n_m_eq_z m p val
+  let rwt = Equal.rewrite (Equal.mirror (mult_m_p_eq_0)) (x => (Equal Nat (Nat.mul n x) 0n))  mult_0_r_n
+  rwt
+
+
+Mult_0_r (n: Nat)     : (Equal Nat (Nat.mul n Nat.zero) Nat.zero)
+Mult_0_r Nat.zero     = Equal.refl
+Mult_0_r (Nat.succ n) = 
+  let ind = Mult_0_r n
+  let app = Equal.apply (x => (Nat.add x Nat.zero)) ind
+  app
+
+
+Mult_n_m_eq_z (n: Nat) (m: Nat) (e: Equal m 0n)   : (Equal _ (Nat.add (Nat.mul n m) m) 0n)
+Mult_n_m_eq_z Nat.zero m e = e
+Mult_n_m_eq_z (Nat.succ n) m e = 
+  let ind = Mult_n_m_eq_z n m e
+  let app = Equal.apply (x => Nat.add x m) ind
+  let rwt = Equal.rewrite e (x => (Equal Nat (Nat.add (Nat.add (Nat.mul n m) m) m) x)) app
+  rwt
+

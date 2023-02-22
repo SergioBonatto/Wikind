@@ -9,6 +9,7 @@ U60.to_bits 0 = Bits.e
 U60.to_bits 1 = Bits.i Bits.e
 U60.to_bits n = U60.to_bits.mk (& n 1) (U60.to_bits (/ n 2))
 
+#partial
 U60.to_bits.mk (c: U60) (bs: Bits) : Bits
 U60.to_bits.mk 0 bs = Bits.o bs
 U60.to_bits.mk 1 bs = Bits.i bs

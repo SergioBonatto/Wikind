@@ -1,0 +1,13 @@
+Spec (x: Bool) : Not (Equal Bool x (Fun x))
+Spec Bool.true = e => match Equal e {
+  refl => Unit.new   
+}: match Bool e.val {
+    true => Unit
+    false => Empty                 
+}
+Spec Bool.false = e => match Equal e {
+  refl => Unit.new 
+}: match Bool e.val {
+  true => Empty
+  false => Unit  
+}

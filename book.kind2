@@ -490,6 +490,14 @@ record Equivalence (p) (q) {
   rgt: q -> p
 }
 
+// #axiom
+Equivalence.rgt <p> <q> (e: Equivalence p q)  : q
+Equivalence.rgt (Equivalence.new p q l r)     = l (Equivalence.lft (Equivalence.new p q l r))
+
+// #axiom
+Equivalence.lft <p> <q> (e: Equivalence p q)  : p
+Equivalence.lft (Equivalence.new p q l r)     = r (Equivalence.rgt (Equivalence.new p q l r))
+
 // iff_sym : (p <-> q) -> (q <-> p)
 // iff_sym (pq, qp) = (qp, pq)
 
@@ -499,13 +507,161 @@ Iff_sym p q (Pair.new pq qp) = (Pair.new qp pq)
 // not_true_iff_false : (Not (b = True)) <-> (b = False)
 // not_true_iff_false {b} = (not_true_is_false b, not_true_and_false b)
 
-// Not_true_iff_false (b: Bool) : Equivalence (Not (Equal Bool b Bool.true)) (Equal b Bool.false)
-// Not_true_iff_false b = ?
+Not_true_iff_false (b: Bool) : Equivalence (Not (Equal Bool b Bool.true)) (Equal b Bool.false)
+Not_true_iff_false b = Equivalence.new (x => (Not_true_is_false b x)) (y => (Not_true_and_false b y))
+//
+
 
 // not_true_and_false : (b : Bool) -> (b = False) -> Not (b = True)
 // not_true_and_false False _ Refl impossible
 // not_true_and_false True Refl _ impossible
-Not_true_and_false (b: Bool) : 
+Not_true_and_false (b: Bool) (h: Equal b Bool.false) : (Not (Equal b Bool.true))
+Not_true_and_false (Bool.false) Equal.refl = 
+  emp =>
+    let p = (Equal.rewrite emp
+    (x => match Bool x {
+      false => Unit
+      true  => Empty
+    })
+    (Unit.new)) 
+  Empty.absurd p
+Not_true_and_false Bool.true h = 
+    let p = (Equal.rewrite h
+    (x => match Bool x {
+      false => Empty
+      true  => Unit
+    })
+    (Unit.new)) 
+  Empty.absurd p
+// ?
+
+// iff_refl : p <-> p
+// iff_refl = ?iff_refl_r
+Equivalence.refl <p>  : Equivalence p p 
+Equivalence.refl p    = (Equivalence.new p p (p => p) (p => p))
+
+
+// iff_trans : (p <-> q) -> (q <-> r) -> (p <-> r)
+// iff_trans piq qir = ?iff_trans_rhs
+#partial
+Equivalence.chain <p> <q> <r> (e0: Equivalence p q) (e1: Equivalence q r) : Equivalence p r
+Equivalence.chain p q r e0 (Equivalence.refl x) = e0 :: Equivalence p x
+
+// or_distributes_over_and : (p `Either` (q,r)) <-> (p `Either` q, p `Either` r)
+// or_distributes_over_and = ?or_distributes_over_and_rhs
+//  TODO: Resolver
+// Or_distributes_over_and <p> <q> <r> : Equivalence (Either p (Pair q r)) (Pair (Either p q) (Either p r))
+// Or_distributes_over_and p q r = ?
+
+// mult_0 : (n * m = Z) <౦> ((n = Z) `Either` (m = Z))
+// mult_0 {n} {m} = (to n m, or_example n m)
+// where
+Mult_0 (n: Nat) (m: Nat) : Equivalence (Equal Nat (Nat.mul n m) 0n) (Either (Equal Nat n 0n) (Equal Nat m 0n))
+Mult_0 n m = Equivalence.new (x => To_mult_0 n m x) (y => Or_example n m y)
+
+// to : (n, m : Nat) -> (n * m = Z) -> (n = 0) `Either` (m = 0)
+// to Z _ Refl = Left Refl
+// to (S _) Z _ = Right Refl
+// to (S _) (S _) Refl impossible
+To_mult_0 (n: Nat) (m: Nat) (e: Equal Nat (Nat.mul n m) 0n) : (Either (Equal Nat n 0n) (Equal Nat m 0n))
+To_mult_0 Nat.zero Nat.zero Equal.refl  = Either.left   Equal.refl
+To_mult_0 Nat.zero (Nat.succ n) e       = Either.left   Equal.refl
+To_mult_0 (Nat.succ n) Nat.zero e       = Either.right  Equal.refl
+To_mult_0 (Nat.succ n) (Nat.succ m) e   = 
+  let plus_comm = Plus_comm (Nat.mul n (Nat.succ m)) (Nat.succ m)
+  let chn_mir   = Equal.chain (Equal.mirror e) plus_comm 
+  let absurdo   = 
+  (Equal.rewrite chn_mir 
+    (x => match Nat x {
+      zero => Unit
+      succ => Empty
+    })
+    (Unit.new))
+  Empty.absurd absurdo
+
+  // ?
+
+// • Expected   : (Either (Equal Nat (Nat.succ n) 0n) (Equal Nat (Nat.succ m) 0n))
+// • e          : (Equal Nat (Nat.add (Nat.mul n (Nat.succ m)) (Nat.succ m)) 0n)
+// • plus_comm  : (Equal Nat (Nat.add n m) (Nat.add m n))
+// • chn_mir    : (Equal Nat 0n (Nat.succ (Nat.add m (Nat.mul n (Nat.succ m)))))
+
+Or_assoc <p> <q> <r> : Equivalence (Either p (Either q r)) (Either (Either p q) r)
+Or_assoc p q r = Equivalence.new (x => To_or_assoc x) (y => Fro_or_assoc y)
+
+To_or_assoc <p> <q> <r> (e: Either p (Either q r))          : Either      (Either p q) r 
+To_or_assoc (Either.left e)                                 = Either.left (Either.left e)
+To_or_assoc (Either.right p (Either q r) (Either.left e))   = Either.left (Either.right e)
+To_or_assoc (Either.right p (Either q r) (Either.right e))  = Either.right e
+
+Fro_or_assoc <p> <q> <r> (e: Either (Either p q) r)         : Either p (Either q r)
+Fro_or_assoc (Either.left (Either p q) r (Either.right e))  = Either.right (Either.left e)
+Fro_or_assoc (Either.left (Either p q) r (Either.left  e))  = Either.left e
+Fro_or_assoc (Either.right e)                               = Either.right (Either.right e)
+
+
+// mult_0_3 : (n * m * p = Z) <->
+// ((n = Z) `Either` ((m = Z) `Either` (p = Z)))
+// mult_0_3 = (to, fro)
+// where
+Mult_0_3 (n: Nat) (m: Nat) (p: Nat) : Equivalence (Equal (Nat.mul n (Nat.mul m p)) Nat.zero) (Either (Equal n Nat.zero) (Either (Equal m Nat.zero) (Equal p Nat.zero)))
+Mult_0_3 n m p = Equivalence.new (x => To_mult_0_3 n m p x) (y => Fro_mult_0_3 n m p y) 
+
+
+// to : (n * m * p = Z) -> ((n = Z) `Either` ((m = Z) `Either` (p = Z)))
+// to {n} {m} {p} prf = let
+//    (nm_p_to, _) = mult_0 {n=(n*m)} {m=p}
+//    (n_m_to, _) = mult_0 {n} {m}
+//    (_, or_a_fro) = or_assoc {p=(n=Z)} {q=(m=Z)} {r=(p=Z)}
+//    in or_a_fro $ case nm_p_to prf of
+//      Left prf ౬> Left $ n_m_to prf
+//      Right prf ౬> Right prf
+To_mult_0_3 (n: Nat) (m: Nat) (p: Nat) (e: Equal (Nat.mul n (Nat.mul m p)) Nat.zero) : Either (Equal n Nat.zero) (Either (Equal m Nat.zero) (Equal p Nat.zero))
+To_mult_0_3 n m p e = Equivalence.lft (Or_assoc (Equal n Nat.zero) (Equal m Nat.zero) (Equal p Nat.zero))
+
+
+// fro : ((n = Z) `Either` ((m = Z) `Either` (p = Z))) -> (n * m * p = Z)
+// fro (Left Refl) = Refl
+// fro {n} (Right (Left Refl)) = rewrite multZeroRightZero n in Refl
+// fro {n} {m} (Right (Right Refl)) = rewrite multZeroRightZero (n*m) in Ref
+#partial
+Fro_mult_0_3 (n: Nat) (m: Nat) (p: Nat) (e: Either (Equal n Nat.zero) (Either (Equal m Nat.zero) (Equal p Nat.zero))) : (Equal (Nat.mul n (Nat.mul m p)) Nat.zero )
+Fro_mult_0_3 Nat.zero m         p (Either.left Equal.refl)  = Equal.refl
+Fro_mult_0_3 n        Nat.zero  p (Either.right Equal.refl) = Mult_0_r n
+Fro_mult_0_3 n        m         Nat.zero (Either.right Equal.refl) = 
+  let mult_0_r_m = Mult_0_r m
+  let mult_0_r_n = Mult_0_r n
+  let rwt = Equal.rewrite (Equal.mirror mult_0_r_m) (x => (Equal Nat (Nat.mul n x) 0n)) mult_0_r_n
+  rwt
+Fro_mult_0_3 (Nat.succ n) m p (Either.left e) =
+  let emp = (Equal.rewrite e 
+    (x => match Nat x {
+      zero => Empty
+      succ => Unit
+    })
+    (Unit.new))
+  Empty.absurd emp
+Fro_mult_0_3 n (Nat.succ m) p (e) =
+  let mult_0_r_n = Mult_0_r n
+  let mult_m_p_eq_0 = Mult_n_m_eq_z m p (Either.rgt (Either.rgt e))
+  let rwt = Equal.rewrite (Equal.mirror (mult_m_p_eq_0)) (x => (Equal Nat (Nat.mul n x) 0n))  mult_0_r_n
+  rwt
+Fro_mult_0_3 n m (Nat.succ p) (Either.right a (Either b c) (Either.right e)) =
+  let emp = (Equal.rewrite e
+		(x => match Nat x {
+		  zero => Empty
+			succ => Unit
+		}) 
+		(Unit.new)) 
+	Empty.absurd emp
+// Fro_mult_0_3 Nat.zero Nat.zero Nat.zero (Either.right (Either.left e))  = Equal.refl
+// Fro_mult_0_3 Nat.zero Nat.zero Nat.zero (Either.right (Either.right e)) = Equal.refl
+// Fro_mult_0_3 Nat.zero Nat.zero (Nat.succ p) (Either.right (Either.left e) ) = Equal.refl
+
+// apply_iff_example : (n, m : Nat) -> n * m = Z -> ((n = Z) `Either` (m = Z))
+// apply_iff_example n m = fst $ mult_0 {n} {m}
+Apply_iff_example (n: Nat) (m: Nat) (e: Equal (Nat.mul n m) Nat.zero) : Either (Equal n Nat.zero) (Equal m Nat.zero)
+Apply_iff_example n m e = Equivalence.rgt (Mult_0 n m)
 
 
 
@@ -566,3 +722,39 @@ Inc n         = ((x: Nat) => Nat.succ x) n
 Pair_second<a> <b> (e: Pair a b) : b
 Pair_second (Pair.new a b) = b
 
+Plus_comm (n: Nat) (m: Nat) : (Equal Nat (Nat.add n m) (Nat.add m n))
+Plus_comm Nat.zero m        = Plus_n_z m
+Plus_comm (Nat.succ n) m    = (Equal.chain (Equal.apply (x => (Nat.succ x))(Plus_comm n m)) (Plus_n_sn m n))
+
+Plus_n_z (n: Nat)     : (Equal Nat n (Nat.add n Nat.zero))
+Plus_n_z Nat.zero     = Equal.refl
+Plus_n_z (Nat.succ n) = (Equal.apply (x => (Nat.succ x)) (Plus_n_z n))
+
+Plus_n_sn (n: Nat) (m: Nat) : (Equal Nat (Nat.succ (Nat.add n m))(Nat.add n (Nat.succ m)))
+Plus_n_sn Nat.zero m        = Equal.refl
+Plus_n_sn (Nat.succ n) m    = (Equal.apply (x => (Nat.succ x)) (Plus_n_sn n m))
+
+// Mult_0_r (n: Nat)     : (Equal Nat (Nat.mul n Nat.zero) Nat.zero)
+// Mult_0_r Nat.zero     = Equal.refl
+// Mult_0_r (Nat.succ n) =
+  // let ind = Mult_0_r n
+  // let app = Equal.apply (x => (Nat.add x Nat.zero)) ind
+  // app
+
+
+// Add_p_mul_mp (m: Nat) (p: Nat): Equal  (Nat.add (Nat.mul m p) p) 0n
+// Add_p_mul_mp m Nat.zero =
+  // let mul_m_0_r = Mult
+  // ?
+
+
+// • Expected: (Equal _ (Nat.add (Nat.add (Nat.mul m (Nat.succ p)) (Nat.succ p)) (Nat.succ p)) 0n)
+// •   ind  :  (Equal _          (Nat.add (Nat.mul m           p) p) 0n)
+
+#partial
+Either.rgt <l> <r> (e: Either l r) : r
+Either.rgt (Either.right l r val) = val
+
+#partial
+Either.lft <l> <r> (e: Either l r) : l
+Either.lft (Either.left l r val) = val
