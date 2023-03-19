@@ -1,0 +1,14 @@
+// ∀x(Px ∨ ¬Px)
+type Pato {
+  is    
+  isnt  
+}
+
+Is_pato (p: Pato) : Bool
+Is_pato Pato.is   = Bool.true
+Is_pato Pato.isnt = Bool.false
+
+Theorem_is_pato (p: Pato) : 
+  Either (Equal (Is_pato Pato.is) Bool.true) (Equal (Is_pato Pato.isnt) Bool.false)
+Theorem_is_pato Pato.is   = ? //Either.right Equal.refl
+Theorem_is_pato Pato.isnt = Either.left  Equal.refl

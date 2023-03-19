@@ -1,3 +1,268 @@
+Evenb (n: Nat)              : Bool
+Evenb Nat.zero              = Bool.true
+Evenb (Nat.succ k)          = Bool.not (Evenb k)
+
+Odd (n: Nat)                : Bool
+Odd Nat.zero                = Bool.false
+Odd (Nat.succ Nat.zero)     = Bool.true
+Odd (Nat.succ (Nat.succ k)) = Odd k
+
+Sexta_negra (n: Nat)      : Equal (Nat.half (Nat.double n)) n
+Sexta_negra Nat.zero      = Equal.refl
+Sexta_negra (Nat.succ n)  =
+  let ind = Sexta_negra n
+  let app = Equal.apply (x => Nat.succ x) ind
+  app
+
+Black_friday (n: Nat)     : Equal (Nat.double (Nat.half n)) n
+Black_friday Nat.zero     = Equal.refl
+Black_friday (Nat.succ n) =
+  let ind  = Black_friday n
+  let app  = Equal.apply (x => Nat.succ x) ind
+  let aux2 = Bf_aux2 (n)
+  let rwt = Equal.rewrite (Equal.mirror aux2) (x => (Equal Nat (x) (Nat.succ n))) app
+  rwt
+  // ?
+
+Black_friday2 (n: Nat) (e: Numepar n) : Equal (Nat.double (Nat.half n)) n  
+Black_friday2 (Nat.zero) e = Equal.refl
+Black_friday2 (Nat.succ Nat.zero) e = 
+  let false_true = Bool.false_not_true e
+  Empty.absurd false_true
+Black_friday2 (Nat.succ (Nat.succ n)) e =
+ let not2e = Not_not_eq_b (Evenb n)
+ let mir   =   (Equal.mirror Bool ((Bool.not (Bool.not (Evenb n)))) (Evenb n) not2e)
+ let chn   = Equal.chain Bool (Evenb n) (Bool.not (Bool.not (Evenb n))) (Bool.true) mir e  
+ let ind   = Black_friday2 n chn
+ let app = Equal.apply (x =>  Nat.succ (Nat.succ x)) ind
+  app
+
+Numepar (n: Nat) : Type
+Numepar n = Equal (Evenb n) Bool.true
+
+
+// Epar (n: Nat)  (e: )               : Equal (Evenb n) Bool.true
+// Epar Nat.zero                 = Equal.refl
+// Epar (Nat.succ Nat.zero)      =
+// Epar (Nat.succ (Nat.succ n))  =
+  // let ind = Epar n
+  // let app = Equal.apply (x => Bool.not (Bool.not x)) ind
+// app
+  // ?
+  
+
+
+Bf_aux (n: Nat)     : Equal (Nat.half (Nat.double n)) (Nat.double (Nat.half n))
+Bf_aux Nat.zero     = Equal.refl
+Bf_aux (Nat.succ n) =
+  let ind   = Bf_aux n
+  let app   = Equal.apply (x => Nat.succ x) ind
+  let aux2  = Bf_aux2 n
+  let rwt   = Equal.rewrite (Equal.mirror aux2) ( x => (Equal Nat (Nat.succ (Nat.half (Nat.double n))) (x))) app
+  rwt
+
+
+Bf_aux2 (n: Nat) : Equal (Nat.double (Nat.half (Nat.succ n))) (Nat.succ (Nat.double (Nat.half n)))
+// Bf_aux2 Nat.zero = ?      // 2 * (( 0 + 1 ) / 2 ) = 1 + ( 2 * ( 0 / 2 ))
+                          // 2 * (1 / 2)          = 1 + (2 * 0)
+                          // 2 * 0                = 1 + 0
+                          //        (Equal _ 0n     1n)
+
+Bff_kingu_s2 <a> (x: a) (f: a -> a) (g: a -> a) : Equal (f (g x)) (g (f x))
+// Bff_kingu_s2 a x f g = ?
+
+
+
+// Big_if_eql (n: Nat)  : Equal (Sigma Nat (k => (Equal (Nat.succ n) (Bool.if (Bool.not (Evenb n)) (Nat.double k) (Nat.succ (Nat.double k))))))(Sigma Nat (k => (Equal n (Bool.if (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))
+// Big_if_eql n  =
+  // let epar    = $ (Nat.half n) Equal.refl
+  // let eimpar  = $ (Nat.pred (Nat.half n)) Equal.refl
+  // Bool.if (Odd n) epar (eimpar)
+  // ?
+
+
+// caso n = 0
+// (Equal
+// (Sigma Nat (k => (Equal 1n (Nat.succ (Nat.double k)))))  ==> k = 0
+// (Sigma Nat (k => (Equal 0n           (Nat.double k)))))  ==> k = 0
+
+// caso n = 1
+// (Equal
+// (Sigma Nat (k => (Equal 2n           (Nat.double k))))   ==> k = 1
+// (Sigma Nat (k => (Equal 1n (Nat.succ (Nat.double k)))))) ==> k = 0
+
+//caso n = 2
+// (Equal
+// (Sigma Nat (k => (Equal 3n (Nat.succ (Nat.double k)))))  ==> k = 1
+// (Sigma Nat (k => (Equal 2n           (Nat.double k)))))  ==> k = 1
+
+// caso n = 3
+// (Equal
+// (Sigma Nat (k => (Equal 4n (Nat.double k))))             ==> k = 2
+// (Sigma Nat (k => (Equal 3n (Nat.succ (Nat.double k)))))) ==> k = 1
+
+// caso n = 4
+// (Equal
+// (Sigma Nat (k => (Equal 5n (Nat.succ (Nat.double k))))) ==> k = 2
+// (Sigma Nat (k => (Equal 4n (Nat.double k)))))           ==> k = 2
+
+// caso n = 5
+// (Equal
+// (Sigma Nat (k => (Equal 6n (Nat.double k))))             ==> k = 3
+// (Sigma Nat (k => (Equal 5n (Nat.succ (Nat.double k)))))) ==> k = 2
+
+
+// Equal_n_succn (n: Nat)  : Equal n (Nat.succ n)
+// Equal_n_succn Nat.zero  =
+  
+  // ?
+
+
+Not_not_eq_b (b: Bool)  : Equal (Bool.not (Bool.not b)) b
+Not_not_eq_b Bool.true  = Equal.refl
+Not_not_eq_b Bool.false = Equal.refl
+
+
+Problems.t6 (a: Bool)   : (Equal Bool (Bool.not (Bool.not a)) a)
+Problems.t6 Bool.false  = Equal.refl
+Problems.t6 Bool.true   = Equal.refl
+
+// evenb_S : (n : Nat) ౏> evenb (S n) = not (evenb n)
+// evenb_S n =
+Evenb_s (n: Nat)                : Equal (Evenb (n)) (Bool.not (Evenb (Nat.succ n)))
+Evenb_s n = Equal.mirror (Not_not_eq_b (Evenb ( n)))
+// Evenb_s Nat.zero                = Equal.refl
+// Evenb_s (Nat.succ Nat.zero)     = Equal.refl
+// Evenb_s (Nat.succ (Nat.succ n)) =
+  // let ind = Evenb_s n
+  // ind
+  // ?
+
+
+Evenb_s1 (n: Nat)                : Equal (Evenb (Nat.succ n)) (Bool.not (Evenb (n)))
+Evenb_s1 n = Equal.refl
+// Evenb_s1 Nat.zero                = Equal.refl
+// Evenb_s1 (Nat.succ Nat.zero)     = Equal.refl
+// Evenb_s1 (Nat.succ (Nat.succ n)) =
+  // let ind = Evenb_s1 n
+  // Equal.refl
+  // ?
+  // ind
+
+App_assoc <t> (xs : List t) (ys : List t) (zs : List t) : Equal (List.concat (List.concat xs ys) zs) (List.concat xs (List.concat ys zs))
+App_assoc List.nil ys  zs                               = Equal.refl
+App_assoc (List.cons xs.head xs.tail) ys zs             = 
+  let ind = App_assoc xs.tail ys zs
+  let app = Equal.apply (x => (List.cons xs.head x)) ind
+  app
+
+
+List.nat_show (xs: List Nat)        : String
+List.nat_show List.nil              = String.nil
+List.nat_show (List.cons xs.h xs.t) = 
+  (String.concat "[" 
+  (String.concat (Nat.show xs.h) 
+  (String.concat "," 
+  (String.concat (List.nat_show xs.t) "]"))))
+
+Mult_0_r (n: Nat)     : (Equal Nat (Nat.mul n Nat.zero) Nat.zero)
+Mult_0_r Nat.zero     = Equal.refl
+Mult_0_r (Nat.succ n) = 
+  let ind = Mult_0_r n
+  let app = Equal.apply (x => (Nat.add x Nat.zero)) ind
+  app
+
+
+Mult_n_m_eq_z (n: Nat) (m: Nat) (e: Equal m 0n)   : (Equal _ (Nat.add (Nat.mul n m) m) 0n)
+Mult_n_m_eq_z Nat.zero m e = e
+Mult_n_m_eq_z (Nat.succ n) m e = 
+  let ind = Mult_n_m_eq_z n m e
+  let app = Equal.apply (x => Nat.add x m) ind
+  let rwt = Equal.rewrite e (x => (Equal Nat (Nat.add (Nat.add (Nat.mul n m) m) m) x)) app
+  rwt
+
+Inc (n: Nat)  : Nat
+Inc n         = ((x: Nat) => Nat.succ x) n
+
+Pair_second<a> <b> (e: Pair a b) : b
+Pair_second (Pair.new a b) = b
+
+Plus_comm (n: Nat) (m: Nat) : (Equal Nat (Nat.add n m) (Nat.add m n))
+Plus_comm Nat.zero m        = Plus_n_z m
+Plus_comm (Nat.succ n) m    = (Equal.chain (Equal.apply (x => (Nat.succ x))(Plus_comm n m)) (Plus_n_sn m n))
+
+Plus_n_z (n: Nat)     : (Equal Nat n (Nat.add n Nat.zero))
+Plus_n_z Nat.zero     = Equal.refl
+Plus_n_z (Nat.succ n) = (Equal.apply (x => (Nat.succ x)) (Plus_n_z n))
+
+Plus_n_sn (n: Nat) (m: Nat) : (Equal Nat (Nat.succ (Nat.add n m))(Nat.add n (Nat.succ m)))
+Plus_n_sn Nat.zero m        = Equal.refl
+Plus_n_sn (Nat.succ n) m    = (Equal.apply (x => (Nat.succ x)) (Plus_n_sn n m))
+
+#axiom
+Either.rgt <l> <r> (e: Either l r) : r
+
+#axiom
+Either.lft <l> <r> (e: Either l r) : l
+
+
+
+Plus_comm_add (n: Nat)       : (Equal Nat (Nat.add n n) (Nat.double n))
+Plus_comm_add Nat.zero       = Equal.refl
+Plus_comm_add (Nat.succ n)   =
+    let ind0 = Plus_comm_add n
+    let ind1 = Equal.mirror (Equal.apply (x => (Nat.succ x)) ind0)
+    let ind2 = Plus_comm_aux n n
+    let chn  = Equal.chain ind1 ind2
+    let app  = Equal.apply (x => (Nat.succ x)) (Equal.mirror chn)
+    app
+
+Plus_comm_aux (n: Nat) (m: Nat)         : (Equal Nat  (Nat.succ (Nat.add n m)) (Nat.add n (Nat.succ m)))
+Plus_comm_aux Nat.zero m                = Equal.refl
+Plus_comm_aux (Nat.succ n) m            =
+    let ind = Plus_comm_aux n m
+    let app = Equal.apply (x => (Nat.succ x)) ind
+    app
+
+
+App_nil_r <t> (xs: List t)              : (Equal (List.concat xs List.nil) xs)
+App_nil_r List.nil                    = Equal.refl
+App_nil_r (List.cons xs.head xs.tail) =
+  let ind = App_nil_r xs.tail
+  let app = Equal.apply (x => (List.cons xs.head x)) ind
+  app
+
+
+App_length <a> (xs: List a) (ys: List a)  : (Equal Nat (List.length (List.concat xs ys)) (Nat.add (List.length xs) (List.length ys)))
+App_length List.nil ys                    = Equal.refl
+App_length (List.cons xs.head xs.tail) ys =
+  let ind = App_length xs.tail ys
+  let app = Equal.apply (x => (Nat.succ x)) ind
+  app
+
+
+// Combine_odd_even_intro Nat.zero podd peven p1 p2                = p2 Equal.refl
+// Combine_odd_even_intro (Nat.succ Nat.zero) podd peven p1 p2     = p1 Equal.refl
+// Combine_odd_even_intro (Nat.succ n) podd peven p1 p2     =
+  // let is_odd  = (x: Equal (Nat.is_odd (Nat.succ n)) Bool.true)  => p1 x
+  // let is_even = (x: Equal (Nat.is_odd (Nat.succ n)) Bool.false) => p2 x
+  // let bool_if = Bool.if (Nat.is_odd (Nat.succ n)) is_odd is_even
+
+Add_z_r (n: Nat)       : (Equal (Nat.add n Nat.zero) n)
+Add_z_r Nat.zero       = Equal.refl
+Add_z_r (Nat.succ n)   =
+     let ind = Add_z_r n
+     let app = (Equal.apply (x => (Nat.succ x)) ind)
+     app
+
+Confia <x> (e : x -> Type) : Type
+// Confia <x> : Type
+// Confia x e =
+
+Rev <a> (xs: List a)      : List a
+Rev List.nil              = List.nil 
+Rev (List.cons head tail) = List.concat (Rev tail) [head]
+
 Nat.show (n: Nat) : String {
   (Nat.to_string_base (U60.to_nat 10) n )
 }
@@ -415,12 +680,12 @@ Pred Nat.zero     = Nat.zero
 Pred (Nat.succ m) = m
 
 Zero_or_succ (n: Nat)     : Either (Equal n Nat.zero) (Equal n (Nat.succ (Pred n)))
-Zero_or_succ Nat.zero     = Either.left Equal.refl
+Zero_or_succ Nat.zero     = Either.left  Equal.refl
 Zero_or_succ (Nat.succ m) = Either.right Equal.refl 
 
 #axiom
 Mult_eq_0 (n: Nat) (m: Nat) (e: Equal (Nat.mul n m) 0n) : Either (Equal n 0n) (Equal m 0n)
-Mult_eq_0 Nat.zero m e = Either.left Equal.refl
+Mult_eq_0 Nat.zero m e = Either.left  Equal.refl
 Mult_eq_0 n Nat.zero e = Either.right Equal.refl
 
 Or_commut <q> <p> (e: Either p q)         : Either q p
@@ -663,9 +928,314 @@ Fro_mult_0_3 n m (Nat.succ p) (Either.right a (Either b c) (Either.right e)) =
 Apply_iff_example (n: Nat) (m: Nat) (e: Equal (Nat.mul n m) Nat.zero) : Either (Equal n Nat.zero) (Equal m Nat.zero)
 Apply_iff_example n m e = Equivalence.rgt (Mult_0 n m)
 
+Four_is_even : Sigma Nat (n => (Equal Nat 4n (Nat.add n n)))
+Four_is_even = $ 2n Equal.refl
+
+
+Exists_example_2 (n: Nat) (m: Sigma Nat (m => (Equal Nat n (Nat.add 4n m)))) : Sigma Nat (o => (Equal Nat n (Nat.add 2n o)))
+Exists_example_2 n (Sigma.new a b fst snd) = $ (Nat.add 2n fst) (specialize b into #0 in snd)
+
+
+// In : (x : a) -> (l : List a) -> Type
+// In x [] = Void
+// In x (x' :: xs) = (x' = x) `Either` In x xs
+In <a> (x: a) (xs: List a) : Type
+In a x List.nil = Empty
+In a x (List.cons xs.h xs.t) = (Either (Equal a x xs.h) (In x xs.t))
+
+// In_example_1 : In 4 [1, 2, 3, 4, 5]
+// In_example_1 = Right $ Right $ Right $ Left Ref
+
+In_example_1 : In 4n [1n, 2n, 3n, 4n, 5n]
+In_example_1 = (Either.right (Either.right (Either.right (Either.left Equal.refl))))
+
+// In_example_2 : In n [2, 4] -> (n' : Nat ** n = 2 * n')
+// In_example_2 (Left Refl) = (1 ** Refl)
+// In_example_2 (Right $ Left Refl) = (2 ** Refl)
+// In_example_2 (Right $ Right prf) = absurd pr
+
+In_example_2 (n: Nat) (i: In n [2n, 4n])  : Sigma Nat (m => (Equal n (Nat.mul 2n m)))
+In_example_2 n (Either.left  e)           = $ 1n e 
+In_example_2 n (Either.right e)           = $ 2n (Either.lft e)
+
+// In_map : (f : a -> b) -> (l : List a) -> (x : a) -> In x l -> In (f x) (map f l)
+// In_map _ [] _ ixl = absurd ixl
+// In_map f (x' :: xs) x (Left prf) = rewrite prf in Left Refl
+// In_map f (x' :: xs) x (Right r) = Right $ In_map f xs x r
+
+In_map <a> <b> (f: a -> b) (xs: List a) (x: a) (i: In x xs) : In (f x) (List.map xs f) 
+In_map a b f (List.nil) x i = Empty.absurd i
+In_map a b f (List.cons xs.h xs.t) x (Either.right e) = Either.right (In_map f xs.t x e)
+In_map a b f (List.cons xs.h xs.t) x (Either.left e)  = 
+    (Equal.rewrite e 
+    (y => (Either (Equal (f x) (f y)) (In (f x) (List.map xs.t f)))) 
+    (Either.left Equal.refl))
+
+// In_map_iff : (f : a -> b) -> (l : List a) -> (y : b) -> (In y (map f l)) <-> (x ** (f x = y, In x l))
+// In_map_iff f l y = ?In_map_iff_rhs
+
+// In_map_equiv <a> <b> (f: a -> b) (l: List a) (y: b) :
+  // Equivalence (In y (List.map l f)) (Sigma a (x => (Pair (Equal (f x) y) (In x l))))
+// In_map_equiv a b f List.nil y =
+  // (Equivalence.new
+    // (x => Empty.absurd x)
+    // ((k: (Sigma a (x => (Pair (Equal (f x) y) Empty)))) => (
+    // _
+    // (?)
+  // )))
+
+// App_nil_r <x> (xs: List x) : Equal (List.concat xs List.nil) xs
+
+Either.swap_prf <l> <r> : Equal (Either l r) (Either r l)
+
+// TODO: Terminar depois
+#partial
+In_app_equiv <a> (x: a) (l1: List a) (l2: List a) :
+  (Equivalence (In x (List.concat l1 l2)) (Either (In x l1) (In x l2)))
+In_app_equiv a x List.nil l2 =
+  let swap_prf          = Either.swap_prf (In x l2) Empty 
+  let in_app_equiv      = In_app_equiv a x l2 List.nil
+  let app_nil_r_l2      = App_nil_r l2
+  let rwt_nil_equiv     = Equal.rewrite app_nil_r_l2 (z => (Equivalence (In x (z)) (Either (In x l2) Empty))) in_app_equiv 
+  let rwt_swap_prf_rwt  = Equal.rewrite swap_prf (z => (Equivalence (In a x l2) z)) rwt_nil_equiv 
+  rwt_swap_prf_rwt
+
+All <t> (p: t -> Type) (l: List t)  : Type
+All t p List.nil                    = Empty 
+All t p (List.cons xs.h xs.t)       = Pair (p xs.h) (All t p xs.t)
+
+// #TODO: terminar
+All_in <t> (p: t -> Type) (l: List t) : Equivalence ((x: t) -> (i: In x l) -> p x) (All p l)
+All_in t p l =  Equivalence.new (x => All_in_rgt t p l x) (x => All_in_lft t p l x)
+
+All_in_rgt <t> (p: t -> Type) (l: List t) (e: (x: t) -> (i: (In x l)) -> (p x)) : (All p l)
+All_in_rgt t p List.nil e = Empty.absurd _
+All_in_rgt t p (List.cons xs.h xs.t) e =
+  let ehd = e xs.h
+  let lft = ehd (Either.left Equal.refl)  
+  let rgt = All_in_rgt t p xs.t (x => y => e x (Either.right y))
+  Pair.new (lft) (rgt)
+
+All_in_lft <t> (p: t -> Type) (l: List t) (e: All p l) : (x : t) -> (i : (In x l)) -> (p x)
+All_in_lft t p List.nil  e = Empty.absurd _
+All_in_lft t p (List.cons xs.h xs.t) (Pair.new fst snd) = x => y =>
+  let ind = All_in_lft t p xs.t snd
+  let eit = Either.rgt y
+  (ind x eit)
+
+// All_in <t> (x: t) (xs: List t) (e: In x xs) (p: t -> Type) : Equivalence (p x) (All p xs)
+// All_in t x List.nil (e) p = Equivalence.new ((y: p x) => e) (Empty.absurd e)
+// All_in t x (List.cons xs.h xs.t) (e) p =
+  // ?
+
+// combine_odd_even podd peven = \n => if mod n 2 == 1 then podd n else peven n
+Combine_odd_even (podd: Nat -> Type) (peven: Nat -> Type) : Nat -> Type
+Combine_odd_even podd peven = (n: Nat) => (Bool.if (Nat.is_odd n) (podd n) (peven n))
+// #partial
+// Combine_odd_even_intro
+  // (podd:  Nat -> Type)
+  // (peven: Nat -> Type)
+  // (n: Nat) ->
+  // (p1: (Equal (Nat.is_odd n) Bool.true)  -> podd  n) ->
+  // (p2: (Equal (Nat.is_odd n) Bool.false) -> peven n) : (Combine_odd_even (podd) (peven)) n
+// Combine_odd_even_intro (Nat.succ (Nat.succ n)) podd peven p1 p2 =
+  // let ind = Combine_odd_even_intro n podd peven p1 p2
+  // let oddd = p1 (Is_odd n)
+  // ?
+ 
+
+Is_odd (n: Nat) : Equal Bool (Nat.is_odd n) Bool.true
+
+Is_even (n: Nat) : Equal Bool (Nat.is_odd n) Bool.false
+
+Ifunciona <l> <r> (b: Bool.if Bool.true l r ) : l
+Ifunciona l r b = b
+
+Combine_odd_even_elim_odd
+  (n: Nat)
+  (podd:  Nat -> Type)
+  (peven: Nat -> Type)
+  (p: (Combine_odd_even podd peven) n)
+  (e: Equal (Nat.is_odd n) Bool.true) : podd n
+// Combine_odd_even_elim_odd n podd peven p e = ?
+
+// combine_odd_even_elim_even : (n : Nat) ->
+// combine_odd_even podd peven n ->
+// oddb n = False ->
+// peven n
+// combine_odd_even_elim_even n x prf = ?combine_odd_even_elim_even_rhs
+Combine_odd_elim_even
+  (n: Nat)
+  (podd: Nat -> Type)
+  (peven: Nat -> Type)
+  (p: (Combine_odd_even podd peven) n)
+  (e: Equal (Nat.is_odd n) Bool.false) : peven n
+// Combine_odd_elim_even n podd peven p e = ?
+
+Plus_comm3 (m: Nat) (n: Nat) (p: Nat) : Equal (Nat.add n (Nat.add m p)) (Nat.add (Nat.add p m) n)
+Plus_comm3 m n p = 
+  let a = Equal.rewrite (Plus_comm p m) (x => (Equal (Nat.add n (Nat.add m p)) (Nat.add (x) n))) (Plus_comm3 m n p)
+  let b = Equal.rewrite (Plus_comm m p) (x => (Equal Nat (Nat.add n (Nat.add m p)) (Nat.add (x) n))) a
+  b
+
+#partial
+Plus_comm3a (m: Nat) (n: Nat) (p: Nat) : Equal (Nat.add n (Nat.add m p)) (Nat.add (Nat.add p m) n)
+Plus_comm3a Nat.zero n p = 
+  let pzr = Add_z_r p
+  let com = Plus_comm n p
+  let rwt = Equal.rewrite (Equal.mirror pzr) (x =>(Equal _ (Nat.add n p) (Nat.add (x) n))) com
+  rwt
+
+Lemma_app_ex 
+  (n: Nat) 
+  (xs: List Nat) 
+  (i: In n (List.map xs (x => Nat.mul x Nat.zero)))   : Equal Nat n 0n
+Lemma_app_ex n List.nil i                             = Empty.absurd i
+Lemma_app_ex n (List.cons xs.h xs.t) (Either.left i)  = 
+  let mult_0_r_xsh = Mult_0_r xs.h
+  let rwt = Equal.rewrite (Equal.mirror i) (x => Equal Nat x 0n) mult_0_r_xsh
+  rwt
+Lemma_app_ex n (List.cons xs.h xs.t) (Either.right i) = Lemma_app_ex n xs.t i
+
+Add_zero (n: Nat)       : (Equal (Nat.add n Nat.zero) n)
+Add_zero Nat.zero       = Equal.refl
+Add_zero (Nat.succ n)   =
+     let ind = Add_zero n
+     let app = (Equal.apply (x => (Nat.succ x)) ind)
+     app
+
+Function_equality_ex1 : Equal (Nat.succ 3n) (Nat.succ (Nat.pred 4n))
+Function_equality_ex1 = Equal.refl
+
+Function_equality_ex2 : Equal ((x: Nat) => Nat.add x 1n) ((x: Nat) => Nat.add 1n x)
+Function_equality_ex2 =
+  Functional_extensionality ((x: Nat) => Nat.add x 1n) ((x: Nat) => Nat.add 1n x) (x => Plus_comm x 1n)
+
+Functional_extensionality <a><b> (f: a -> b) (g: a -> b) (e: (x: a) -> Equal (f x) (g x)) : Equal f g
+// Functional_extensionality a b f g e = Confia e
+
+Plus_1_eq_succ (x: Nat) : Equal (Nat.add x 1n) (Nat.succ x)
+Plus_1_eq_succ Nat.zero = Equal.refl
+Plus_1_eq_succ (Nat.succ n) = 
+  let ind = Plus_1_eq_succ n
+  Equal.apply (x => Nat.succ x) ind
+
+Rev_append <x> (l1: List x) (l2: List x)  : List x
+Rev_append x List.nil l2                  = l2
+Rev_append x (List.cons xs.h xs.t) l2     = Rev_append xs.t (List.cons xs.h l2) 
+
+Tr_rev <x> (l: List x) : List x
+Tr_rev x l = Rev_append x l List.nil
+
+Tr_rev_correct <a> (xs: List a)         : Equal (Tr_rev xs) (Rev xs)
+Tr_rev_correct a List.nil               = Equal.refl
+Tr_rev_correct a (List.cons xs.h xs.t)  =
+  let ind  = Tr_rev_correct a xs.t
+  let app1 = Equal.apply (x => List.concat x (List.cons xs.h List.nil)) ind
+  let eql  = List_equal2 xs.t [xs.h]
+  let rwt  = Equal.rewrite (Equal.mirror eql) (x => (Equal (x) (List.concat (Rev xs.t) (List.cons xs.h (List.nil))))) app1
+  rwt
+
+List_equal <a> (xs: List a) : Equal (List.concat xs List.nil) xs
+List_equal a List.nil               = Equal.refl
+List_equal a (List.cons xs.h xs.t)  = 
+  let ind = List_equal a xs.t
+  let app = Equal.apply (x => List.cons xs.h x) ind
+  app
+
+List_equal2 <a> (xs: List a) (ys: List a) : Equal (Rev_append xs ys) (List.concat (Rev_append xs List.nil) ys)
+List_equal2 a List.nil ys                 = Equal.refl
+List_equal2 a (List.cons xs.h xs.t) ys    =
+  let ind1 = List_equal2 a xs.t (List.cons xs.h ys)
+  let ind2 = List_equal2 a xs.t [xs.h]
+  let app1 = Equal.apply (x => List.concat x ys) ind2
+  let ass1 = App_assoc (Rev_append xs.t List.nil) (List.cons xs.h List.nil) ys
+  let chn1 = Equal.chain (app1) ass1
+  let chn2 = Equal.chain ind1 (Equal.mirror chn1) 
+  chn2
+
+Evenb_double (k: Nat)     : Equal (Nat.is_even (Nat.double k)) Bool.true
+Evenb_double Nat.zero     = Equal.refl
+Evenb_double (Nat.succ k) = Evenb_double k
+
+Evenb_double_conv (n: Nat):
+  Sigma Nat (k => (Equal n (Bool.if (Evenb n) (Nat.double k) (Nat.succ (Nat.double k)))))
+Evenb_double_conv Nat.zero                        = $ 0n (Equal.refl)
+Evenb_double_conv (Nat.succ Nat.zero)             = $ 0n (Equal.refl)
+Evenb_double_conv (Nat.succ (Nat.succ n))  =
+  let nnb  = Not_not_eq_b (Evenb n)
+  let ind  = Evenb_double_conv n
+  let test = match Sigma ind {
+    new fst snd =>
+      (
+        let test1 = Equal.apply (x => Bool.if_not x) snd
+        let test3 = Equal.apply (x => Nat.succ (Nat.succ x)) snd
+        let test4 = Big_ifao n fst
+        let chn = Equal.chain test3 test4
+        chn
+        // ?dd
+      )
+    }
+  let test2 = match Sigma ind {
+    new fst snd => (
+      let nnb   = Not_not_eq_b (Evenb n)
+      let rwt   = Equal.rewrite (Equal.mirror nnb) (x => (Equal Nat n (Bool.if _ (x) (Nat.double fst) (Nat.succ (Nat.double fst))))) snd
+      let rwt1 = Equal.rewrite rwt (x => (Sigma Nat (k => (Equal Nat x (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) ind
+      let rwt2 = Equal.rewrite nnb (x => (Sigma Nat (k => (Equal Nat (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) rwt1
+      rwt2
+      // ?
+    ) 
+  } 
+  let test3 = match Sigma test2 {
+    new fst snd => snd
+  }
+  // let chn1 = Equal.chain (Equal.mirror test2) test3
+  let rwt3 = Equal.rewrite (test3) (x => (Sigma Nat (k => (Equal Nat (x) (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) test2
+  // let rwt4 = Equal.rewrite
+  
+  // rwt3
+  // $ n rwt3
+
+?
+
+
+
+// • Expected: (Sigma Nat (k => (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double k)                         (Nat.succ (Nat.double k))))))
+// •   nnb   : (Equal Bool                                                      (Bool.not (Bool.not (Evenb n))) (Evenb n))
+// •   ind   : (Sigma Nat (k => (Equal Nat                     n   (Bool.if Nat                     (Evenb n)                     (Nat.double k)                         (Nat.succ (Nat.double k))))))
+// •   test  :                  (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat                     (Evenb n) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))))
+// •   test2 : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double fst)                       (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double k)                         (Nat.succ (Nat.double k))))))
+// •   test3 : (Equal Nat                                          (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double fst)                       (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double fst)                       (Nat.succ (Nat.double fst))))
+// •   rwt3  : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat                     (Evenb n)                     (Nat.double fst)                       (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double k)                         (Nat.succ (Nat.double k))))))
+
+//
+//
+// • Expected: (Sigma Nat (k => (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double k) (Nat.succ (Nat.double k))))))
+//
+// •   nnb   :                  (Equal Bool (Bool.not (Bool.not (Evenb n))) (Evenb n))
+
+// •   ind   : (Sigma Nat (k => (Equal Nat                     n   (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))
+
+// •   test  :                  (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat (Evenb n) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))))
+
+// •   test2 : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))          ==> rgt feito
+
+// •   test3 : (Equal Nat                                          (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))))
+
+// •   rwt3  : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))
+//
+
+
 
 
 Main {
+
   // let c = Filter_even_gt7 b
   let d = [1n, 2n, 3n, 4n]
   let e = Maybe.some (3n)
@@ -686,75 +1256,30 @@ Main {
   // (x => Nat.show x) c
 
   // Nat.show (Plus3 3n)
-  // List.nat_show (Fold_map (x => Nat.add 3n x) d)
+  // let pmap = f => (x: Pair Nat Nat ) => Pair.new (Pair.map_fst (Pair.fst x) f ) (Pair.map_snd (Pair.snd x) f)
   // Pair_curry (x => (y) => (Pair.new y y))  1n 2n
- Nat.show (Inc 0n)
-  
-}
+ // Nat.show (Inc 0n)
+ Tr_rev d
+ // Black_friday2 (3n) Equal.refl
+ // Evenb_double_conv 1n
+ // (Pair.map (Prova2 3n 7n)(x => Nat.to_u60 x))
+ }
 
-List.nat_show (xs: List Nat)        : String
-List.nat_show List.nil              = String.nil
-List.nat_show (List.cons xs.h xs.t) = 
-  (String.concat "[" 
-  (String.concat (Nat.show xs.h) 
-  (String.concat "," 
-  (String.concat (List.nat_show xs.t) "]"))))
+#partial
+Bool.if_not <a> (i: a) : a
+Bool.if_not (Bool.if a b t f ) = (Bool.if a (Bool.not b) t f)
 
-Mult_0_r (n: Nat)     : (Equal Nat (Nat.mul n Nat.zero) Nat.zero)
-Mult_0_r Nat.zero     = Equal.refl
-Mult_0_r (Nat.succ n) = 
-  let ind = Mult_0_r n
-  let app = Equal.apply (x => (Nat.add x Nat.zero)) ind
-  app
-
-
-Mult_n_m_eq_z (n: Nat) (m: Nat) (e: Equal m 0n)   : (Equal _ (Nat.add (Nat.mul n m) m) 0n)
-Mult_n_m_eq_z Nat.zero m e = e
-Mult_n_m_eq_z (Nat.succ n) m e = 
-  let ind = Mult_n_m_eq_z n m e
-  let app = Equal.apply (x => Nat.add x m) ind
-  let rwt = Equal.rewrite e (x => (Equal Nat (Nat.add (Nat.add (Nat.mul n m) m) m) x)) app
+Big_ifao (n: Nat) (k: Nat):
+  (Equal (Nat.succ (Nat.succ (Bool.if (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))) 
+  (Bool.if (Evenb n) (Nat.succ (Nat.succ (Nat.double k))) (Nat.succ (Nat.succ (Nat.succ (Nat.double k))))))
+Big_ifao Nat.zero k                 = Equal.refl
+Big_ifao (Nat.succ Nat.zero) k      = Equal.refl
+Big_ifao (Nat.succ (Nat.succ n)) k  =
+  let ind = Big_ifao n k
+  let nnb = Not_not_eq_b (Evenb n)
+  let rwt = Equal.rewrite (Equal.mirror nnb) (x =>  Equal (Nat.succ (Nat.succ (Bool.if (x) _ _))) (Bool.if (x) _ _))  (ind)
   rwt
 
-Inc (n: Nat)  : Nat
-Inc n         = ((x: Nat) => Nat.succ x) n
-
-Pair_second<a> <b> (e: Pair a b) : b
-Pair_second (Pair.new a b) = b
-
-Plus_comm (n: Nat) (m: Nat) : (Equal Nat (Nat.add n m) (Nat.add m n))
-Plus_comm Nat.zero m        = Plus_n_z m
-Plus_comm (Nat.succ n) m    = (Equal.chain (Equal.apply (x => (Nat.succ x))(Plus_comm n m)) (Plus_n_sn m n))
-
-Plus_n_z (n: Nat)     : (Equal Nat n (Nat.add n Nat.zero))
-Plus_n_z Nat.zero     = Equal.refl
-Plus_n_z (Nat.succ n) = (Equal.apply (x => (Nat.succ x)) (Plus_n_z n))
-
-Plus_n_sn (n: Nat) (m: Nat) : (Equal Nat (Nat.succ (Nat.add n m))(Nat.add n (Nat.succ m)))
-Plus_n_sn Nat.zero m        = Equal.refl
-Plus_n_sn (Nat.succ n) m    = (Equal.apply (x => (Nat.succ x)) (Plus_n_sn n m))
-
-// Mult_0_r (n: Nat)     : (Equal Nat (Nat.mul n Nat.zero) Nat.zero)
-// Mult_0_r Nat.zero     = Equal.refl
-// Mult_0_r (Nat.succ n) =
-  // let ind = Mult_0_r n
-  // let app = Equal.apply (x => (Nat.add x Nat.zero)) ind
-  // app
-
-
-// Add_p_mul_mp (m: Nat) (p: Nat): Equal  (Nat.add (Nat.mul m p) p) 0n
-// Add_p_mul_mp m Nat.zero =
-  // let mul_m_0_r = Mult
-  // ?
-
-
-// • Expected: (Equal _ (Nat.add (Nat.add (Nat.mul m (Nat.succ p)) (Nat.succ p)) (Nat.succ p)) 0n)
-// •   ind  :  (Equal _          (Nat.add (Nat.mul m           p) p) 0n)
-
-#partial
-Either.rgt <l> <r> (e: Either l r) : r
-Either.rgt (Either.right l r val) = val
-
-#partial
-Either.lft <l> <r> (e: Either l r) : l
-Either.lft (Either.left l r val) = val
+// Pair.map <a> <b> <c> (pair: Pair a a) (func: a -> c) : Pair c c
+// Pair.map a b c (Pair.new t.a t.b p.fst p.snd) func =
+  // Pair.new c t.b (func p.fst) (func p.snd)pkkkkkj

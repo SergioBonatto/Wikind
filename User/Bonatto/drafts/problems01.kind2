@@ -166,6 +166,7 @@ Problems.t22 (Nat.succ Nat.zero) e  = (Equal.apply (x => Nat.succ x) e)
 
 Problems.t23 (n: Nat) (m: Nat) (e: Equal (Nat.equal n m) Bool.true): (Equal n m)
 Problems.t23 Nat.zero Nat.zero e            = Equal.refl 
+// Problems.t23 Nat.zero (Nat.succ m) e        = ?
 Problems.t23 (Nat.succ n) (Nat.succ m) e    =
     let ind  = Problems.t23 n m e     
     let app  = Equal.apply (x => (Nat.succ x)) ind 
@@ -202,7 +203,7 @@ Problems.t28    = x => (Equal.rewrite x (k => if k { Nat } else { Empty }) Nat.z
 
 // FIXME: é isso mesmo????
 Problems.t29 :  Not(Equal Nat (Nat.succ(Nat.succ(Nat.zero))) (Nat.succ(Nat.zero)))
-// Problems.t29 =
+// Problems.t29 =  x => Equal.rewrite x (k => if k {Nat} else {Empty}) Nat.zero
     // x => (
         // let ind =
         // let i0  = Equal.apply (x => (Nat.is_zero x)) ind

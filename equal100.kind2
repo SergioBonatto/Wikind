@@ -1,0 +1,2 @@
+Is_equal_100 : Equal Nat (Nat.add 33n 77n) (100n)
+Is_equal_100   = (x: Nat) => (Equal.rewrite x (k => if k { Nat } else { Empty }) Nat.zero)
