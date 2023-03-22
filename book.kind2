@@ -1168,48 +1168,58 @@ Evenb_double_conv (Nat.succ (Nat.succ n))  =
   let test = match Sigma ind {
     new fst snd =>
       (
-        let test1 = Equal.apply (x => Bool.if_not x) snd
+        // let test1 = Equal.apply (x => Bool.if_not x) snd
         let test3 = Equal.apply (x => Nat.succ (Nat.succ x)) snd
         let test4 = Big_ifao n fst
-        let chn = Equal.chain test3 test4
+        let chn   = Equal.chain test3 test4
         chn
-        // ?dd
       )
     }
   let test2 = match Sigma ind {
     new fst snd => (
-      let nnb   = Not_not_eq_b (Evenb n)
-      let rwt   = Equal.rewrite (Equal.mirror nnb) (x => (Equal Nat n (Bool.if _ (x) (Nat.double fst) (Nat.succ (Nat.double fst))))) snd
+      let nnb  = Not_not_eq_b (Evenb n)
+      let rwt  = Equal.rewrite (Equal.mirror nnb) (x => (Equal Nat n (Bool.if _ (x) (Nat.double fst) (Nat.succ (Nat.double fst))))) snd
       let rwt1 = Equal.rewrite rwt (x => (Sigma Nat (k => (Equal Nat x (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) ind
       let rwt2 = Equal.rewrite nnb (x => (Sigma Nat (k => (Equal Nat (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) rwt1
       rwt2
-      // ?
     ) 
   } 
   let test3 = match Sigma test2 {
     new fst snd => snd
   }
-  // let chn1 = Equal.chain (Equal.mirror test2) test3
-  let rwt3 = Equal.rewrite (test3) (x => (Sigma Nat (k => (Equal Nat (x) (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) test2
-  // let rwt4 = Equal.rewrite
-  
-  // rwt3
-  // $ n rwt3
-
+  let test4 = match Sigma test2 {
+    new fst snd => fst
+  }
+  let rwt3  = Equal.rewrite (test3) (x => (Sigma Nat (k => (Equal Nat (x) (_))))) test2
+  let test5 = match Sigma test2 {
+    new fst snd => (Big_ifinho n fst)
+  }
+  let chn = Equal.chain test (test5)
 ?
 
 
 
-// • Expected: (Sigma Nat (k => (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double k)                         (Nat.succ (Nat.double k))))))
+// • Expected: (Sigma Nat (k => (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double k)                           (Nat.succ (Nat.double k))))))
+// =========================================================================================================================================================================================================
 // •   nnb   : (Equal Bool                                                      (Bool.not (Bool.not (Evenb n))) (Evenb n))
-// •   ind   : (Sigma Nat (k => (Equal Nat                     n   (Bool.if Nat                     (Evenb n)                     (Nat.double k)                         (Nat.succ (Nat.double k))))))
-// •   test  :                  (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat                     (Evenb n) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))))
-// •   test2 : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double fst)                       (Nat.succ (Nat.double fst))) 
-//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double k)                         (Nat.succ (Nat.double k))))))
-// •   test3 : (Equal Nat                                          (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double fst)                       (Nat.succ (Nat.double fst))) 
-//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double fst)                       (Nat.succ (Nat.double fst))))
-// •   rwt3  : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat                     (Evenb n)                     (Nat.double fst)                       (Nat.succ (Nat.double fst))) 
-//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double k)                         (Nat.succ (Nat.double k))))))
+// =========================================================================================================================================================================================================
+// •   ind   : (Sigma Nat (k => (Equal Nat                     n   (Bool.if Nat                     (Evenb n)                     (Nat.double k)                           (Nat.succ (Nat.double k))))))
+// =========================================================================================================================================================================================================
+// •   test  :                  (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat                     (Evenb n) (Nat.succ (Nat.succ (Nat.double fst)))   (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))))
+// =========================================================================================================================================================================================================
+// •   test2 : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double fst)                         (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double k)                           (Nat.succ (Nat.double k))))))
+// =========================================================================================================================================================================================================
+// •   test3 : (Equal Nat                                          (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double fst)                         (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double fst)                         (Nat.succ (Nat.double fst))))
+// =========================================================================================================================================================================================================
+// •   rwt3  : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat                     (Evenb n)                     (Nat.double fst)                         (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double k)                           (Nat.succ (Nat.double k))))))
+// =========================================================================================================================================================================================================
+// •   test5 : (Equal Nat                                          (Bool.if Nat                     (Evenb fst) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))) 
+//                                                                 (Bool.if Nat                     (Evenb fst)                     (Nat.double fst)                       (Nat.succ (Nat.double fst))))
+// =========================================================================================================================================================================================================
+
 
 //
 //
@@ -1217,20 +1227,21 @@ Evenb_double_conv (Nat.succ (Nat.succ n))  =
 //
 // •   nnb   :                  (Equal Bool (Bool.not (Bool.not (Evenb n))) (Evenb n))
 
-// •   ind   : (Sigma Nat (k => (Equal Nat                     n   (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))
+// •   ind   : (Sigma Nat (k => (Equal Nat                     n   (Bool.if Nat                     (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))
 
-// •   test  :                  (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat (Evenb n) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))))
+// •   test  :                  (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat                     (Evenb n) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))))
 
 // •   test2 : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) 
-//                                                                 (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))          ==> rgt feito
+//                                                                 (Bool.if Nat                     (Evenb n)   (Nat.double k)   (Nat.succ (Nat.double k))))))          ==> rgt feito
 
 // •   test3 : (Equal Nat                                          (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) 
-//                                                                 (Bool.if Nat (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))))
+//                                                                 (Bool.if Nat                     (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))))
 
-// •   rwt3  : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))) 
-//                                                                 (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))
-//
+// •   rwt3  : (Sigma Nat (k => (Equal Nat                         (Bool.if Nat                     (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))) 
+//                                                                 (Bool.if Nat                     (Evenb n) (Nat.double k)   (Nat.succ (Nat.double k))))))
 
+// •   test5 :                  (Equal Nat                         (Bool.if Nat                     (Evenb n) (Nat.succ (Nat.succ (Nat.double n))) (Nat.succ (Nat.succ (Nat.succ (Nat.double n))))) 
+//                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double n)                       (Nat.succ (Nat.double n))))
 
 
 
@@ -1280,6 +1291,11 @@ Big_ifao (Nat.succ (Nat.succ n)) k  =
   let rwt = Equal.rewrite (Equal.mirror nnb) (x =>  Equal (Nat.succ (Nat.succ (Bool.if (x) _ _))) (Bool.if (x) _ _))  (ind)
   rwt
 
+
+
+
+
+Big_ifinho (n: Nat) (fst: Nat) : (Equal Nat  (Bool.if _ (Evenb n) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst)))))   (Bool.if Nat (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))))
 // Pair.map <a> <b> <c> (pair: Pair a a) (func: a -> c) : Pair c c
 // Pair.map a b c (Pair.new t.a t.b p.fst p.snd) func =
   // Pair.new c t.b (func p.fst) (func p.snd)pkkkkkj

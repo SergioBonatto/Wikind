@@ -1,0 +1,116 @@
+Bool.match (scrutinee: (Bool)) -(motive: ((val_ : (Bool)) -> Type)) (true_: (motive (Bool.true))) (false_: (motive (Bool.false))) : (motive scrutinee)
+Bool.match (Bool.true) motive true false = ((true) :: (motive (Bool.true)))
+Bool.match (Bool.false) motive true false = ((false) :: (motive (Bool.false)))
+
+Evenb (n: (Nat)) : (Bool)
+Evenb (Nat.zero) = (Bool.true)
+Evenb (Nat.succ k) = (Bool.not (Evenb k))
+
+#kdl_name = Equal_mirror
+Equal.mirror <t> <a: t> <b: t> (e: (Equal t a b)) : (Equal t b a)
+Equal.mirror t a b (Equal.refl u k) = (Equal.refl u k)
+
+Nat.match (scrutinee: (Nat)) -(motive: ((val_ : (Nat)) -> Type)) (zero_: (motive (Nat.zero))) (succ_: ((pred : (Nat)) -> (motive (Nat.succ pred)))) : (motive scrutinee)
+Nat.match (Nat.zero) motive zero succ = ((zero) :: (motive (Nat.zero)))
+Nat.match (Nat.succ pred_) motive zero succ = ((succ pred_) :: (motive (Nat.succ pred_)))
+
+#derive[match]
+type Bool {
+  true
+  false
+}
+
+#kdl_name = Nat_double
+Nat.double (x: (Nat)) : (Nat)
+Nat.double (Nat.succ x) = (Nat.succ (Nat.succ (Nat.double x)))
+Nat.double (Nat.zero) = (Nat.zero)
+
+Equal.match <t> <a: t> <b: t> (scrutinee: (Equal t a b)) -(motive: ((b : t) -> (val_ : (Equal t a b)) -> Type)) (refl_: (motive a (Equal.refl t a))) : (motive b scrutinee)
+Equal.match (Equal.refl t_ a_) motive refl = ((refl) :: (motive a_ (Equal.refl t_ a_)))
+
+#inline
+Nat.is_even (n: (Nat)) : (Bool)
+Nat.is_even n = (Bool.not (Nat.is_odd n))
+
+#kdl_name = Equal_chain
+Equal.chain <t> <a: t> <b: t> <c: t> (e0: (Equal t a b)) (e1: (Equal t b c)) : (Equal t a c)
+Equal.chain t a b c e0 (Equal.refl u x) = (e0 :: (Equal t a x))
+
+#kdl_name = T2
+#kdl_erase
+#derive[match]
+record Pair (a) (b) {
+  constructor new
+  fst : a 
+  snd : b 
+}
+
+#kdl_name = Equal_apply
+Equal.apply <t> <u> <a: t> <b: t> (f: (t -> u)) (e: (Equal t a b)) : (Equal u (f a) (f b))
+Equal.apply t_t u a b f (Equal.refl t x) = (Equal.refl u (f x))
+
+Pair.match <a> <b> (scrutinee: (Pair a b)) -(motive: ((val_ : (Pair a b)) -> Type)) (new_: ((fst : a) -> (snd : b) -> (motive (Pair.new a b fst snd)))) : (motive scrutinee)
+Pair.match (Pair.new a_ b_ fst_ snd_) motive new = ((new fst_ snd_) :: (motive (Pair.new a_ b_ fst_ snd_)))
+
+#derive[match]
+type Equal <t> (a: t) ~ (b: t) {
+  refl : (Equal t a a)
+}
+
+#kdl_name = Sigma
+#derive[match]
+record Sigma (a: Type) (f: (a -> Type)) {
+  constructor new
+  fst : a 
+  snd : (f fst) 
+}
+
+Sigma.match <a: Type> <f: (a -> Type)> (scrutinee: (Sigma a f)) -(motive: ((val_ : (Sigma a f)) -> Type)) (new_: ((fst : a) -> (snd : (f fst)) -> (motive (Sigma.new a f fst snd)))) : (motive scrutinee)
+Sigma.match (Sigma.new a_ f_ fst_ snd_) motive new = ((new fst_ snd_) :: (motive (Sigma.new a_ f_ fst_ snd_)))
+
+Evenb_double (k: (Nat)) : (Equal (Nat.is_even (Nat.double k)) (Bool.true))
+Evenb_double (Nat.zero) = (Equal.refl)
+Evenb_double (Nat.succ k) = (Evenb_double k)
+
+Not_not_eq_b (b: (Bool)) : (Equal (Bool.not (Bool.not b)) b)
+Not_not_eq_b (Bool.true) = (Equal.refl)
+Not_not_eq_b (Bool.false) = (Equal.refl)
+
+#kdl_name = Bool_if
+Bool.if <a> (b: (Bool)) (t: a) (f: a) : a
+Bool.if a (Bool.true) t f = t
+Bool.if a (Bool.false) t f = f
+
+#derive[match]
+type Nat {
+  zero
+  succ (pred: (Nat))
+}
+
+Evenb_double_conv (n: (Nat)) : (Sigma (Nat) (k => (Equal n (Bool.if (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))
+Evenb_double_conv (Nat.zero) = ($ 0numb (Equal.refl))
+Evenb_double_conv (Nat.succ (Nat.zero)) = ($ 0numb (Equal.refl))
+Evenb_double_conv (Nat.succ (Nat.succ n)) = (let nnb = (Not_not_eq_b (Evenb n)); (let ind = (Evenb_double_conv n); (let test = (match Sigma ind { new fst snd => (let test3 = (Equal.apply (x => (Nat.succ (Nat.succ x))) snd); (let test4 = (Big_ifao n fst); (let chn = (Equal.chain test3 test4); chn))); }); (let test2 = (match Sigma ind { new fst snd => (let nnb = (Not_not_eq_b (Evenb n)); (let rwt = (Equal.rewrite (Equal.mirror nnb) (x => (Equal (Nat) n (Bool.if _ x (Nat.double fst) (Nat.succ (Nat.double fst))))) snd); (let rwt1 = (Equal.rewrite rwt (x => (Sigma (Nat) (k => (Equal (Nat) x (Bool.if (Nat) (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) ind); (let rwt2 = (Equal.rewrite nnb (x => (Sigma (Nat) (k => (Equal (Nat) (Bool.if (Nat) (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) (Bool.if (Nat) (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) rwt1); rwt2)))); }); (let test3 = (match Sigma test2 { new fst snd => snd; }); (let test4 = (match Sigma test2 { new fst snd => fst; }); (let rwt3 = (Equal.rewrite test3 (x => (Sigma (Nat) (k => (Equal (Nat) x _)))) test2); (let test5 = (match Sigma test2 { new fst snd => (Big_ifinho n fst); }); (let chn = (Equal.chain test test5); ?)))))))))
+
+Big_ifao (n: (Nat)) (k: (Nat)) : (Equal (Nat.succ (Nat.succ (Bool.if (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))) (Bool.if (Evenb n) (Nat.succ (Nat.succ (Nat.double k))) (Nat.succ (Nat.succ (Nat.succ (Nat.double k))))))
+Big_ifao (Nat.zero) k = (Equal.refl)
+Big_ifao (Nat.succ (Nat.zero)) k = (Equal.refl)
+Big_ifao (Nat.succ (Nat.succ n)) k = (let ind = (Big_ifao n k); (let nnb = (Not_not_eq_b (Evenb n)); (let rwt = (Equal.rewrite (Equal.mirror nnb) (x => (Equal (Nat.succ (Nat.succ (Bool.if x _ _))) (Bool.if x _ _))) ind); rwt)))
+
+#kdl_name = Bool_not
+Bool.not (a: (Bool)) : (Bool)
+Bool.not (Bool.true) = (Bool.false)
+Bool.not (Bool.false) = (Bool.true)
+
+#kdl_name = Equal_rewrit
+Equal.rewrite <t> <a: t> <b: t> (e: (Equal t a b)) -(p: (t -> Type)) (x: (p a)) : (p b)
+Equal.rewrite t a b (Equal.refl u k) p x = (x :: (p k))
+
+#kdl_name = Nat_is_odd
+Nat.is_odd (a: (Nat)) : (Bool)
+Nat.is_odd (Nat.zero) = (Bool.false)
+Nat.is_odd (Nat.succ (Nat.zero)) = (Bool.true)
+Nat.is_odd (Nat.succ (Nat.succ a)) = (Nat.is_odd a)
+
+Big_ifinho (n: (Nat)) (fst: (Nat)) : (Equal (Nat) (Bool.if _ (Evenb n) (Nat.succ (Nat.succ (Nat.double fst))) (Nat.succ (Nat.succ (Nat.succ (Nat.double fst))))) (Bool.if (Nat) (Evenb n) (Nat.double fst) (Nat.succ (Nat.double fst))))
+
