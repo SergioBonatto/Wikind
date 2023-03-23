@@ -1160,43 +1160,43 @@ Evenb_double (Nat.succ k) = Evenb_double k
 
 Evenb_double_conv (n: Nat):
   Sigma Nat (k => (Equal n (Bool.if (Evenb n) (Nat.double k) (Nat.succ (Nat.double k)))))
-Evenb_double_conv Nat.zero                        = $ 0n (Equal.refl)
-Evenb_double_conv (Nat.succ Nat.zero)             = $ 0n (Equal.refl)
-Evenb_double_conv (Nat.succ (Nat.succ n))  =
-  let nnb  = Not_not_eq_b (Evenb n)
-  let ind  = Evenb_double_conv n
-  let test = match Sigma ind {
-    new fst snd =>
-      (
-        // let test1 = Equal.apply (x => Bool.if_not x) snd
-        let test3 = Equal.apply (x => Nat.succ (Nat.succ x)) snd
-        let test4 = Big_ifao n fst
-        let chn   = Equal.chain test3 test4
-        chn
-      )
-    }
-  let test2 = match Sigma ind {
-    new fst snd => (
-      let nnb  = Not_not_eq_b (Evenb n)
-      let rwt  = Equal.rewrite (Equal.mirror nnb) (x => (Equal Nat n (Bool.if _ (x) (Nat.double fst) (Nat.succ (Nat.double fst))))) snd
-      let rwt1 = Equal.rewrite rwt (x => (Sigma Nat (k => (Equal Nat x (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) ind
-      let rwt2 = Equal.rewrite nnb (x => (Sigma Nat (k => (Equal Nat (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) rwt1
-      rwt2
-    ) 
-  } 
-  let test3 = match Sigma test2 {
-    new fst snd => snd
-  }
-  let test4 = match Sigma test2 {
-    new fst snd => fst
-  }
-  let rwt3  = Equal.rewrite (test3) (x => (Sigma Nat (k => (Equal Nat (x) (_))))) test2
-  let test5 = match Sigma test2 {
-    new fst snd => (Big_ifinho n fst)
-  }
-  let chn = Equal.chain test (test5)
-?
-
+// Evenb_double_conv Nat.zero                        = $ 0n (Equal.refl)
+// Evenb_double_conv (Nat.succ Nat.zero)             = $ 0n (Equal.refl)
+// Evenb_double_conv (Nat.succ (Nat.succ n))  =
+//   let nnb  = Not_not_eq_b (Evenb n)
+//   let ind  = Evenb_double_conv n
+//   let test = match Sigma ind {
+//     new fst snd =>
+//       (
+//         // let test1 = Equal.apply (x => Bool.if_not x) snd
+//         let test3 = Equal.apply (x => Nat.succ (Nat.succ x)) snd
+//         let test4 = Big_ifao n fst
+//         let chn   = Equal.chain test3 test4
+//         chn
+//       )
+//     }
+//   let test2 = match Sigma ind {
+//     new fst snd => (
+//       let nnb  = Not_not_eq_b (Evenb n)
+//       let rwt  = Equal.rewrite (Equal.mirror nnb) (x => (Equal Nat n (Bool.if _ (x) (Nat.double fst) (Nat.succ (Nat.double fst))))) snd
+//       let rwt1 = Equal.rewrite rwt (x => (Sigma Nat (k => (Equal Nat x (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) ind
+//       let rwt2 = Equal.rewrite nnb (x => (Sigma Nat (k => (Equal Nat (Bool.if Nat (Bool.not (Bool.not (Evenb n))) (Nat.double fst) (Nat.succ (Nat.double fst))) (Bool.if Nat (Evenb n) (Nat.double k) (Nat.succ (Nat.double k))))))) rwt1
+//       rwt2
+//     )
+//   }
+//   let test3 = match Sigma test2 {
+//     new fst snd => snd
+//   }
+//   let test4 = match Sigma test2 {
+//     new fst snd => fst
+//   }
+//   let rwt3  = Equal.rewrite (test3) (x => (Sigma Nat (k => (Equal Nat (x) (_))))) test2
+//   let test5 = match Sigma test2 {
+//     new fst snd => (Big_ifinho n fst)
+//   }
+//   let chn = Equal.chain test (test5)
+// ?
+//
 
 
 // • Expected: (Sigma Nat (k => (Equal Nat (Nat.succ (Nat.succ n)) (Bool.if Nat (Bool.not (Bool.not (Evenb n)))                   (Nat.double k)                           (Nat.succ (Nat.double k))))))
@@ -1244,6 +1244,28 @@ Evenb_double_conv (Nat.succ (Nat.succ n))  =
 //                                                                 (Bool.if Nat                     (Evenb n)                     (Nat.double n)                       (Nat.succ (Nat.double n))))
 
 
+// beq_nat_true_iff : (n1, n2 : Nat) -> (n1 == n2 = True) <-> (n1 = n2)
+// beq_nat_true_iff n1 n2 = (to, fro n1 n2)
+Beq_nat_true_equiv (n1: Nat) (n2: Nat) : Equivalence (Equal (Nat.equal n1 n2) Bool.true) (Equal n1 n2)
+// Beq_nat_true_equiv n1 n2 = Equivalence.new To_beq_nat_true (Fro_beq_nat_true n1 n2)
+
+
+// where
+// to : (n1 == n2 = True) -> (n1 = n2)
+// to = beq_nat_true {n=n1} {m=n2}
+
+To_beq_nat_true (n1: Nat) (n2: Nat) (e: Equal (Nat.equal n1 n2) Bool.true) : Equal n1 n2  
+// To_beq_nat_true Nat.zero Nat.zero Equal.refl = Equal.refl
+// To_beq_nat_true Nat.zero n2 e = ?
+// To_beq_nat_true (Nat.succ n1) (Nat.succ n2) e = ?
+
+
+Fro_beq_nat_true (n1: Nat) (n2: Nat) (e: Equal  n1 n2) : Equal (Nat.equal n1 n2) Bool.true
+Fro_beq_nat_true n1 n2 e = ?
+
+
+// fro : (n1, n2 : Nat) -> (n1 = n2) -> (n1 == n2 = True)
+// fro n1 n1 Refl = sym $ beq_nat_refl n1
 
 Main {
 
