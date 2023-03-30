@@ -1292,8 +1292,8 @@ Fro_beq_nat_true (Nat.succ n1) (Nat.succ n2) e =
 
 // is_even_prime : Nat -> Bool
 // is_even_prime n = if n = 2 then True else False
-Is_even_prime : Nat -> Bool
-Is_even_prime = (n: Nat) => Bool.if (Nat.equal n 2n) Bool.true Bool.false
+// Is_even_prime : Nat -> Bool
+// Is_even_prime = (n: Nat) => Bool.if (Equal n 2n) Bool.true Bool.false
 
 // even_1000 : (k ** 1000 = double k)
 Even_1000 : Sigma Nat (k => Equal 1000n (Nat.double k))
@@ -1306,12 +1306,12 @@ Even_1000a = Equal.refl
 
 // even_1000'' : (k ** 1000 = double k)
 // even_1000'' = (fst $ even_bool_prop {n=1000}) Refl
-// Even_1000b : Sigma Nat (k => Equal 1000n (Nat.double k))
-// Even_1000b =
+Even_1000b : Sigma Nat (k => Equal 1000n (Nat.double k))
+Even_1000b =
   // let test5 = match {
     // new fst snd => fst
   // }
-  // ?
+  ?
   
 Main {
 
