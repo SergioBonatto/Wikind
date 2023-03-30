@@ -1,0 +1,20 @@
+Extract_equal (n1: Nat) (n2: Nat) (e: Equal (Nat.equal n1 n2) Bool.true) : Equal n1 n2
+Extract_equal Nat.zero Nat.zero (Equal.refl) = Equal.refl
+Extract_equal Nat.zero (Nat.succ n2) (e) = 
+  let emp = (Equal.rewrite e 
+    (x => match Bool x {
+      true  => Empty
+      false => Unit
+    })
+    (Unit.new))
+  Empty.absurd emp
+Extract_equal (Nat.succ n1) Nat.zero (e) = 
+  let emp = (Equal.rewrite e 
+    (x => match Bool x {
+      true  => Empty
+      false => Unit
+    })
+    (Unit.new))
+  Empty.absurd emp
+Extract_equal (Nat.succ n1) (Nat.succ n2) e = Equal.apply (x => Nat.succ x) (Extract_equal n1 n2 e)
+
