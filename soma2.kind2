@@ -1,0 +1,51 @@
+One_plus_one (n: Nat): Equal (Nat.add n n) (Nat.double n)
+One_plus_one Nat.zero = Equal.refl
+One_plus_one (Nat.succ n) = 
+  let ind = One_plus_one n
+  let app = Equal.apply (x => Nat.succ (Nat.succ x)) ind
+  let sad = Succ_add n
+  let chn = Equal.chain sad app
+  chn
+
+Succ_add (n: Nat) : (Equal Nat (Nat.succ (Nat.add n (Nat.succ n))) (Nat.succ (Nat.succ (Nat.add n n))))
+Succ_add Nat.zero = Equal.refl
+Succ_add (Nat.succ n) =
+  let ind = Succ_add n
+  let app = Equal.apply (x => Nat.succ (Nat.succ x)) ind
+  let aux = Succ_aux n
+  let chn = Equal.chain aux (Equal.mirror app)
+  chn
+  // ?
+
+
+// • Expected: (Equal Nat (Nat.succ (Nat.succ           (Nat.add n (Nat.succ (Nat.succ n)))))
+//                        (Nat.succ (Nat.succ (Nat.succ (Nat.add n           (Nat.succ n))))))
+// ===============================================================================================
+
+// •   ind   : (Equal Nat                     (Nat.succ (Nat.add n           (Nat.succ n)))
+//                                  (Nat.succ (Nat.succ (Nat.add n                     n))))
+// •   app   : (Equal Nat (Nat.succ (Nat.succ (Nat.succ (Nat.add n           (Nat.succ n))))) 
+//              (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.add n                     n))))))
+
+
+Succ_aux (n: Nat) : Equal Nat (Nat.succ (Nat.succ (Nat.add n (Nat.succ (Nat.succ n)))))(Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.add n n)))))
+Succ_aux Nat.zero = Equal.refl
+Succ_aux (Nat.succ n) =
+  let ind = Succ_aux n
+  let app = Equal.apply (x => Nat.succ x) ind
+  let com = Plus_comm n n
+  let app2 = Equal.apply (x => Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.succ x))))) com
+  ?
+
+// (Equal Nat (Nat.succ (Nat.succ (Nat.succ (Nat.add n (Nat.succ (Nat.succ (Nat.succ n))))))) 
+//            (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.add n (Nat.succ n))))))))
+// (Equal Nat (Nat.succ (Nat.succ (Nat.succ (Nat.add n           (Nat.succ (Nat.succ n))))))  
+//            (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.add n           n)))))))
+// (Equal Nat (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.add n n))))))) 
+//            (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.succ (Nat.add n (Nat.succ n))))))))
+// (Equal Nat                     (Nat.succ (Nat.add n                               n))                                                        (Nat.add n (Nat.succ n)))
+
+Plus_comm (n: Nat) (m: Nat) : Equal (Nat.succ ((Nat.add n m))) (Nat.add n (Nat.succ m))
+
+
+

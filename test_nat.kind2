@@ -1,0 +1,59 @@
+Nat.show (n: Nat) : String {
+  (Nat.to_string_base (U60.to_nat 10) n)
+}
+
+Inc (n: Nat)  : Nat
+Inc n         = Nat.succ n
+
+Dec (n: Nat)      : Nat
+Dec Nat.zero      = Nat.zero
+Dec (Nat.succ n)  = n
+
+Add (n: Nat) (m: Nat) : Nat
+Add Nat.zero m        = m
+Add (Nat.succ n) m    = Add n (Nat.succ m)
+
+Sub (n: Nat) (m: Nat) : Nat
+Sub (Nat.zero) m      = Nat.zero
+Sub n Nat.zero        = n
+Sub (Nat.succ n) m    = Sub n (Dec m)
+
+Mul (n: Nat) (m: Nat)     : Nat
+Mul Nat.zero m            = Nat.zero
+Mul n Nat.zero            = Nat.zero
+Mul n (Nat.succ Nat.zero) = n
+Mul (Nat.succ Nat.zero) m = m
+Mul (Nat.succ n) (m)      = Add m (Mul n m)
+
+Div (n: Nat) (m: Nat)         : Nat
+Div n Nat.zero                = Nat.zero
+Div Nat.zero m                = Nat.zero
+Div n (Nat.succ Nat.zero)     = n
+Div (Nat.succ Nat.zero) m     = Nat.zero
+Div n m = Nat.succ (Div (Sub n m ) m)
+
+Fat (n: Nat)      : Nat
+Fat Nat.zero      = (Nat.succ Nat.zero)
+Fat (Nat.succ n)  = Mul (Nat.succ n) (Fat n)
+
+Exp (n: Nat) (m: Nat) : Nat
+Exp n Nat.zero        = Nat.succ Nat.zero
+Exp n (Nat.succ m)    = Mul n (Exp n m)
+
+Main {
+  // (Nat.show (Fat 5n))
+  // (Nat.show (Inc 9n))
+  // (Nat.show (Dec 9n))
+  // (Nat.show (Add 5n 6n))
+  // (Nat.show (Sub 10n 4n))
+  // (Nat.show (Mul 10n 10n))
+  // (Nat.show (Div 25n 2n))
+  (Nat.show (Exp 2n 10n))
+  
+}
+
+// Mul2_eq_add_2times (n: Nat) : Equal (Mul 2n n) (Add n n)
+// Mul2_eq_add_2times Nat.zero = Equal.refl
+// Mul2_eq_add_2times (Nat.succ n) =
+  // let ind = Mul2_eq_add_2times n
+  // ?

@@ -1,0 +1,125 @@
+Half (n: Nat)
+ :(Sigma Nat (m =>
+    let e = Equal Nat n (Nat.double m)
+    let o = Equal Nat n (Nat.succ (Nat.double m))
+    Either e o))
+Half Nat.zero = Sigma.new Nat.zero (Either.left (Equal Nat 0n 0n) (Equal Nat 0n 1n) Equal.refl) 
+Half (Nat.succ n)  =
+  let ind = Half n
+  let app = Half.aux1 n ind
+  app
+  // ?
+
+Half.aux1
+  (n: Nat)
+  (s: Sigma Nat (m => (Either (Equal Nat n (Nat.double m)) (Equal Nat n (Nat.succ (Nat.double m)))))) 
+ :(Sigma Nat (m => 
+    let lft = Equal Nat (Nat.succ n) (Nat.double m) 
+    let rgt = Equal Nat (Nat.succ n) (Nat.succ (Nat.double m))
+    Either lft rgt)) 
+Half.aux1 n (Sigma.new a b fst snd) = Half.aux2 n fst (specialize b into #0 in snd)
+
+Half.aux2 
+  (n: Nat) 
+  (m: Nat) 
+  (e: Either (Equal n (Nat.double m)) (Equal n (Nat.succ (Nat.double m))))
+ :(Sigma Nat (m =>
+    let lft = Equal Nat (Nat.succ n) (Nat.double m)
+    let rgt = Equal Nat (Nat.succ n) (Nat.succ (Nat.double m))
+    Either lft rgt))
+Half.aux2 n m (Either.left  a b v) = Sigma.new m (Either.right (Equal.apply (x => Nat.succ x) v))
+Half.aux2 n m (Either.right a b v) = Sigma.new (Nat.succ m) (Either.left (Equal.apply (x => Nat.succ x) v))
+
+
+
+
+
+// Half.aux2 <p> <q> (x: p -> q) : q
+//
+// Half.aux (n: Nat) (e: Equal Bool (Evenb n) Bool.true)
+//   : Sigma Nat (m =>
+//     let e = Equal Nat n (Nat.double m)
+//     let o = Equal Nat n (Nat.succ (Nat.double m))
+//     (Either e o))
+// Half.aux Nat.zero e = Sigma.new 0n (Either.left (Equal Nat 0n 0n) (Equal Nat 0n 1n) Equal.refl)
+// Half.aux n e =
+//   let ne   = Numeimpar n
+//   let bff1 = Equal Nat n (Nat.double (Nat.half n))
+//   let bff2 = Equal Nat n (Nat.succ (Nat.double (Nat.half n)))
+//   let lft  = Sigma.new (Nat.half n) ((Either.left  (bff1) (bff2) (Equal.mirror (Black_friday2 n e))))
+//   let rgt  = Sigma.new (Nat.half n) ((Either.right (bff1) (bff2) (Black_friday3 n (Equal.chain e (Equal.mirror (True_is_false Bool.false))))))
+//   Bool.if (Nat.is_even n) (lft) (rgt)
+//
+//   // ?
+//   // _
+//
+//
+//
+// Black_friday2 (n: Nat) (e: Numepar n) : Equal (Nat.double (Nat.half n)) n
+// Black_friday2 (Nat.zero) e = Equal.refl
+// Black_friday2 (Nat.succ Nat.zero) e =
+//   let false_true = Bool.false_not_true e
+//   Empty.absurd false_true
+// Black_friday2 (Nat.succ (Nat.succ n)) e =
+//  let not2e = Not_not_eq_b (Evenb n)
+//  let mir   = (Equal.mirror Bool ((Bool.not (Bool.not (Evenb n)))) (Evenb n) not2e)
+//  let chn   = Equal.chain Bool (Evenb n) (Bool.not (Bool.not (Evenb n))) (Bool.true) mir e
+//  let ind   = Black_friday2 n chn
+//  let app   = Equal.apply (x =>  Nat.succ (Nat.succ x)) ind
+//   app
+//   // ?
+//
+// Black_friday3 (n: Nat) (e: Numeimpar n) : Equal Nat n (Nat.succ (Nat.double (Nat.half n)))
+// Black_friday3 Nat.zero e  = Black_friday2 (Nat.succ Nat.zero) (Equal.mirror e)
+// Black_friday3 (Nat.succ Nat.zero) e = Equal.refl
+// Black_friday3 (Nat.succ (Nat.succ n)) e =
+//   let ne  = Not_not_eq_b (Evenb n)
+//   let chn = Equal.chain (Equal.mirror ne) e
+//   let ind = Black_friday3 n chn
+//   let app = Equal.apply (x => Nat.succ (Nat.succ x)) ind
+//   app
+// // ?
+//
+// True_is_false (b: Bool) : Equal b Bool.true
+// True_is_false Bool.true  = Equal.refl
+// True_is_false Bool.false =
+//   let test2 = (x: (Equal Bool.true Bool.true )) => (Not_implies_our_not x)
+//   let test  = Not_true_is_false Bool.true test2
+//   Equal.mirror test
+// // ?
+//
+// Numepar (n: Nat) : Type
+// Numepar n = Equal (Evenb n) Bool.true
+//
+// Numeimpar (n: Nat) : Type
+// Numeimpar n = Equal (Evenb n) Bool.false
+//
+// Not_true_is_false (b: Bool) (h: Not (Equal Bool b Bool.true)) : (Equal Bool b Bool.false)
+// Not_true_is_false Bool.false h = Equal.refl
+// Not_true_is_false Bool.true  h = Empty.absurd (h Equal.refl)
+//
+// Bool.if <r> (b: Bool) (if_t: r) (if_f: r) : r
+// Bool.if r Bool.true  if_t if_f = if_t
+// Bool.if r Bool.false if_t if_f = if_f
+//
+// Evenb (n: Nat)      : Bool
+// Evenb Nat.zero      = Bool.true
+// Evenb (Nat.succ k)  = Bool.not (Evenb k)
+//
+// Not_not_eq_b (b: Bool)  : Equal (Bool.not (Bool.not b)) b
+// Not_not_eq_b Bool.true  = Equal.refl
+// Not_not_eq_b Bool.false = Equal.refl
+//
+// Not_implies_our_not1 <p> (e: Not p) : p -> Empty
+// Not_implies_our_not1 p e = e
+//
+// Not_implies_our_not <p> (e: p) : Empty
+// // Not_implies_our_not p e =
+//   // let test  = (x: Not p) => Not_implies_our_not1 p (x)
+//   // let test1 = Not_implies_our_not test
+//   // let test2 = (x: Empty) => Empty.absurd x
+//   // let test3 = Not_implies_our_not1 test2
+//   // ?
+//
+// // Ex_falso_quodlibet <p> : Empty -> p
+// // Ex_falso_quodlibet p = e => Empty.absurd e

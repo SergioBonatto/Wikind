@@ -1,0 +1,61 @@
+Bool.if <r> (b: Bool) (if_t: r) (if_f: r) : r
+Bool.if r Bool.true  if_t if_f = if_t
+Bool.if r Bool.false if_t if_f = if_f
+
+Nat.show (n: Nat) : String {
+  (Nat.to_string_base (U60.to_nat 10) n)
+}
+
+List.to_nat (xs : List U60) : List Nat
+List.to_nat xs = List.map xs (x => U60.to_nat x)
+
+List.head (xs: List U60) : U60
+List.head List.nil = 0
+List.head (List.cons xs.h xs.t) = xs.h
+
+List.reverse <a> (xs: List a ) : List a
+List.reverse a List.nil = List.nil
+List.reverse a (List.cons xs.h xs.t) = List.concat (List.reverse a xs.t) [xs.h]
+
+List.lenght <a> (xs: List a) : Nat
+List.lenght a List.nil = 0n
+List.lenght a (List.cons xs.h xs.t) = (Nat.succ (List.lenght xs.t))
+
+List.last (xs: List U60 ) : U60
+List.last List.nil = 0
+List.last (List.cons xs.h xs.t) = (List.head (List.reverse xs.t))
+
+List.show (xs: List U60) : String
+List.show xs = String.concat "[" (String.concat (List.show.aux xs) "]")
+
+List.show.aux (xs: List U60) : String
+List.show.aux List.nil = ""
+List.show.aux (List.cons xs.h List.nil) = (U60.show xs.h)
+List.show.aux (List.cons xs.h xs.t) =
+(String.concat (String.concat (U60.show xs.h) "," ) (List.show.aux  xs.t) )
+
+
+Main {
+  // (Nat.show (List.head [21n, 2n, 3n, 4n]))
+ (List.show (List.reverse U60 [1, 2, 3, 4, 5]))
+ // (List.show [(List.last [1, 2, 3, 4, 5]), (List.last [3, 2, 3, 1, 4])])
+ // (Nat.show (List.lenght [1, 2, 3, 5]))
+}
+
+U60.show (n: U60) : String
+U60.show n = String.reverse(U60.show.go n)
+
+U60.show.go (n: U60) : String
+U60.show.go 0 = String.cons '0' String.nil
+U60.show.go 1 = String.cons '1' String.nil
+U60.show.go 2 = String.cons '2' String.nil
+U60.show.go 3 = String.cons '3' String.nil
+U60.show.go 4 = String.cons '4' String.nil
+U60.show.go 5 = String.cons '5' String.nil
+U60.show.go 6 = String.cons '6' String.nil
+U60.show.go 7 = String.cons '7' String.nil
+U60.show.go 8 = String.cons '8' String.nil
+U60.show.go 9 = String.cons '9' String.nil
+U60.show.go n =
+  if (U60.to_bool(< n 10)) {(U60.show.go n)}
+    else {String.cons (+ 48 (% n 10)) (U60.show.go (/ n 10)) }
