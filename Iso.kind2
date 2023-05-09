@@ -1,0 +1,123 @@
+Bool.if <r: Type> (b: Bool) (if_t: r) (if_f: r) : r
+Bool.if  r       Bool.true   if_t      if_f     = if_t
+Bool.if  r       Bool.false  if_t      if_f     = if_f
+
+Nat.div (n: Nat) (m: Nat)           : Nat
+Nat.div Nat.zero m                  = Nat.zero
+Nat.div n Nat.zero                  = Nat.zero
+Nat.div n (Nat.succ Nat.zero)       = n
+Nat.div (Nat.succ (Nat.succ Nat.zero)) (Nat.succ (Nat.zero)) = Nat.zero
+Nat.div (n) (Nat.succ (Nat.succ m)) =
+  let lft  = (Nat.succ (Nat.div (Nat.sub n (Nat.succ (Nat.succ m))) (Nat.succ (Nat.succ m))))
+  let rgt  = Nat.zero
+  Bool.if (Nat.lte n (Nat.succ m)) rgt lft
+
+Flip (n: Nat)                 : Nat
+Flip Nat.zero                 = 1n
+Flip (Nat.succ Nat.zero)      = 0n
+Flip (Nat.succ (Nat.succ n))  = Flip n
+
+Mod2 (n: Nat) : Nat
+Mod2 Nat.zero     = Nat.zero
+Mod2 (Nat.succ n) = Flip (Mod2 n)
+
+Bits.show (b: Bits) : String
+Bits.show Bits.e = ""
+Bits.show (Bits.o b) = String.concat "0" (Bits.show b)
+Bits.show (Bits.i b) = String.concat "1" (Bits.show b)
+
+Nat.show (n: Nat) : String {
+  (Nat.to_string_base (U60.to_nat 10) n)
+}
+
+Bits.concat (b1: Bits) (b2: Bits) : Bits
+Bits.concat (Bits.e) b2 = b2
+Bits.concat (Bits.o b1) b2 = Bits.o (Bits.concat b1 b2)
+Bits.concat (Bits.i b1) b2 = Bits.i (Bits.concat b1 b2)
+
+Nat.to_bits (n: Nat)            : Bits
+Nat.to_bits (Nat.zero)          = Bits.o Bits.e
+Nat.to_bits (Nat.succ Nat.zero) = Bits.i Bits.e
+Nat.to_bits (n)                 = Bits.concat (Nat.to_bits (Mod2 n)) (Nat.to_bits (Nat.div n 2n))
+
+// Num (n: Nat) : Bits
+// Num Nat.zero = Bits.e
+// Num (Nat.succ n) =
+
+
+
+  // (Nat.match.parity
+    // n
+    // (n => (((m : Nat) -> (Sigma.match (Nat.half.rel (Nat.double m)) (x => (Num (Nat.double m)))
+    // (fst => (snd => (Either.match snd (snd => _)
+    // (snd.val => (Equal.rewrite (Equal.mirror snd.val) (x => (Num x)) (? fst)))
+    // (snd.val => (Equal.rewrite (Equal.mirror snd.val) (x => (Num x)) (? fst))))))))
+  // )) ? ?)
+
+
+
+
+Bits.to_nat (b: Bits) : Nat
+Bits.to_nat b = Bits.to_nat.aux (Bits.mirror b)
+
+Bits.mirror (b: Bits)   : Bits
+Bits.mirror (Bits.e)    = Bits.e
+Bits.mirror (Bits.o b)  = Bits.concat (Bits.mirror b) (Bits.o Bits.e)
+Bits.mirror (Bits.i b)  = Bits.concat (Bits.mirror b) (Bits.i Bits.e)
+
+Bits.to_nat.aux (b: Bits)   : Nat
+Bits.to_nat.aux (Bits.e)    = 0n
+Bits.to_nat.aux (Bits.o b)  = (Nat.add (Nat.mul 0n (Nat.pow 2n (Bits.length b))) (Bits.to_nat.aux b))
+Bits.to_nat.aux (Bits.i b)  = (Nat.add (Nat.mul 1n (Nat.pow 2n (Bits.length b))) (Bits.to_nat.aux b))
+
+// 2⁰ 2¹ 2² 2³ 2⁴ 2⁵ 2⁶ <=> 2⁶ 2⁵ 2⁴ 2³ 2² 2¹ 2⁰  
+// 0  1  0  1  0  0  0  <=> 0  0  0  1  0  1  0
+
+Iso (n: Nat)  : Equal Nat (Bits.to_nat (Nat.to_bits n)) n
+Iso (n) =
+  (Nat.match n (n => Equal Nat (Bits.to_nat (Nat.to_bits (n))) (n))
+    Equal.refl
+    (pred =>
+      let ind = Iso pred
+      let app = Equal.apply (x => Nat.succ x) ind
+      let mir = Equal.mirror (Iso.aux pred)
+      let chn = Equal.chain mir app
+      chn
+      // ?
+    )
+  )
+//
+
+Iso.aux (n: Nat) : Equal (Nat.succ (Bits.to_nat.aux (Bits.mirror (Nat.to_bits n)))) (Bits.to_nat.aux (Bits.mirror (Nat.to_bits (Nat.succ n))))
+// Iso.aux Nat.zero = Equal.refl
+Iso.aux n =
+// Iso.aux (Nat.succ n) =
+  // let ind = Iso.aux n
+   Ffsn n (x => Nat.to_bits x) (y => Bits.to_nat y)
+  // ?
+
+
+Ffsn (n: Nat) (nb: Nat -> Bits) (bn: Bits -> Nat) : Equal (Nat.succ (bn (nb n))) (bn (nb (Nat.succ n)))
+Ffsn Nat.zero (Bits.to_nat Nat.zero) bn = ?
+
+Main {
+ // (Bits.to_string (Nat.to_bits 10n))
+ // (Bits.to_string (Bits.mirror (Bits.i (Bits.o (Bits.i (Bits.i Bits.e))))))
+ (Nat.show (Bits.to_nat (Nat.to_bits 21n)))
+ // (Nat.show (Nat.div 2n 1n))
+ // (Nat.show (Bits.to_nat (Bits.i (Bits.i (Bits.i (Bits.o Bits.e))))))
+}
+
+// Nat.match.parity
+//   (n: Nat)
+//   (p: Nat -> Type)
+//   (e: (m: Nat) -> p (Nat.double m))
+//   (o: (m: Nat) -> p (Nat.succ (Nat.double m)))
+// : (p n)
+// Nat.match.parity n p e o =
+//   (Sigma.match (Nat.half.rel n) (x => p n) (fst => snd =>
+//     match Either snd {
+//       left  => Equal.rewrite (Equal.mirror snd.val) (x => p x) (e fst)
+//       right => Equal.rewrite (Equal.mirror snd.val) (x => p x) (o fst)
+//     }
+//   ))

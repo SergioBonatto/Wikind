@@ -1,0 +1,32 @@
+Concat <a: Type> (xs: List a) (ys: List a)  : List a
+Concat (List.nil)            ys             = ys
+Concat (List.cons head tail) ys             = List.cons head (Concat tail ys)
+
+Rev <a> (xs: List a)      : List a
+Rev List.nil              = [] 
+Rev (List.cons head tail) = Concat (Rev tail) [head] 
+
+
+Rev_involutive <a> (xs: List a)         : Equal (xs) (Rev (Rev xs))
+Rev_involutive a List.nil               = Equal.refl
+Rev_involutive a (List.cons xs.h xs.t)  =
+  // let ind = Rev_involutive xs.t
+  // let app = Equal.apply (x => List.cons xs.h x) ind
+  // let rad = Rev_app_distr xs.t
+  // let mir = Equal.mirror rad
+
+  let rev = Rev_app_distr (Rev xs.t) [xs.h]
+  let ind   = Rev_involutive xs.t
+  let app1  = Equal.apply (x => (List.cons xs.h x)) ind
+  let chn   = Equal.chain rev app1
+  Equal.mirror chn
+  // ?
+
+
+  // let ind = Rev xs.t
+  // ?
+
+Rev_app_distr <a> (xs: List a) (ys: List a)   : (Equal (Rev (List.concat xs ys)) (List.concat (Rev ys) (Rev xs)))
+
+App_nil_r <a> (xs: List a)              : (Equal (List.concat xs List.nil) xs)
+

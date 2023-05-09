@@ -1,0 +1,170 @@
+
+IsEven (n: Nat) : Type
+IsEven Nat.zero                = Unit
+IsEven (Nat.succ Nat.zero)     = Empty
+IsEven (Nat.succ (Nat.succ n)) = IsEven n
+
+// ------------------
+
+// Theorem (n: Nat) (is_even: IsEven n) : Equal Nat (Mod2 n) Nat.zero
+// Theorem Nat.zero                is_even = Equal.refl
+// Theorem (Nat.succ Nat.zero)     is_even = Empty.absurd is_even
+// Theorem (Nat.succ (Nat.succ p)) is_even =
+//   let ind = Theorem p is_even
+//   let prf = Equal.apply (x => Flip (Flip x)) ind
+//   prf
+//
+// ------------------
+//
+// Theorem (n: Nat) (is_even: IsEven n) : Equal Nat (Mod2 n) Nat.zero
+// Theorem n is_even =
+//   match Nat n with (is_even : IsEven n) {
+//     zero => Equal.refl
+//     succ => match Nat n.pred with (is_even : IsEven (Nat.succ n.pred)) {
+//       zero => Empty.absurd is_even
+//       succ =>
+//         let ind = Theorem n.pred.pred is_even
+//         let prf = Equal.apply (x => Flip (Flip x)) ind
+//         prf
+//     }: Equal Nat (Flip (Mod2 n.pred)) 0n
+//   }: Equal Nat (Mod2 n) Nat.zero
+//
+// ------------------
+
+// Theorem (n: Nat) (is_even: IsEven n) : Equal Nat (Mod2 n) Nat.zero
+// Theorem n is_even =
+//   ((Nat.match n (n => (is_even: IsEven n) -> Equal Nat (Mod2 n) Nat.zero)
+//     // case zero
+//     (is_even => Equal.refl)
+//     // case succ
+//     (pred => is_even =>
+//       ((Nat.match pred (pred => (is_even: (IsEven (Nat.succ pred))) -> (Equal Nat (Flip (Mod2 pred)) 0n))
+//        
+//         (is_even => Empty.absurd is_even)
+//         // case succ
+//         (pred => is_even =>
+//           let ind = Theorem pred is_even
+//           let prf = Equal.apply (x => Flip (Flip x)) ind
+//           prf)
+//       ) is_even)
+//     )
+//   ) is_even)
+//
+// ------------------
+
+Theorem (n: Nat) (is_even: IsEven n) : Equal Nat (Mod2 n) Nat.zero
+Theorem n is_even =
+  ((Nat.match.parity n (n => (is_even: IsEven n) -> Equal Nat (Mod2 n) Nat.zero)
+    (half => is_even => Theorem.aux0 half)
+    (half_pred => is_even => Theorem.aux1 half_pred is_even)
+  ) is_even)
+
+Theorem.aux0 (m: Nat) : Equal Nat (Mod2 (Nat.double m)) 0n
+Theorem.aux0 Nat.zero     = Equal.refl
+Theorem.aux0 (Nat.succ n) =
+  let ind = Theorem.aux0 n
+  let prf = Equal.apply (x => Flip (Flip x)) ind
+  prf
+
+Theorem.aux1 (m: Nat) (e: IsEven (Nat.succ (Nat.double m))) : Equal Nat (Flip (Mod2 (Nat.double m))) 0n
+Theorem.aux1 Nat.zero     e = Empty.absurd e
+Theorem.aux1 (Nat.succ p) e =
+  let ind = Theorem.aux1 p e
+  let prf = Equal.apply (x => Flip (Flip x)) ind
+  prf
+
+// ------------------
+
+// Nat.to_bits n
+
+
+// Iso Nat.zero      = Equal.refl
+// Iso (Nat.succ n)  =
+  // let ind = Iso n
+  // ?
+
+
+// Nat.to_bits (n: Nat)     : Bits
+// Nat.to_bits Nat.zero     = Bits.o Bits.e
+// Nat.to_bits (Nat.succ n) = Nat.to_bits.aux (Nat.succ n)
+
+Bool.if <r: Type> (b: Bool) (if_t: r) (if_f: r) : r
+Bool.if  r       Bool.true   if_t      if_f     = if_t
+Bool.if  r       Bool.false  if_t      if_f     = if_f
+
+Nat.div (n: Nat) (m: Nat)           : Nat
+Nat.div Nat.zero m                  = Nat.zero
+Nat.div n Nat.zero                  = Nat.zero
+Nat.div n (Nat.succ Nat.zero)       = n
+Nat.div (Nat.succ (Nat.succ Nat.zero)) (Nat.succ (Nat.zero)) = Nat.zero
+Nat.div (n) (Nat.succ (Nat.succ m)) = 
+  let lft  = (Nat.succ (Nat.div (Nat.sub n (Nat.succ (Nat.succ m))) (Nat.succ (Nat.succ m)))) 
+  let rgt  = Nat.zero
+  Bool.if (Nat.lte n (Nat.succ m)) rgt lft
+
+Flip (n: Nat)                 : Nat
+Flip Nat.zero                 = 1n
+Flip (Nat.succ Nat.zero)      = 0n
+Flip (Nat.succ (Nat.succ n))  = Flip n
+
+Mod2 (n: Nat) : Nat
+Mod2 Nat.zero     = Nat.zero
+Mod2 (Nat.succ n) = Flip (Mod2 n)
+
+Nat.to_bits (n: Nat)            : Bits
+Nat.to_bits (Nat.zero)          = Bits.o Bits.e
+Nat.to_bits (Nat.succ Nat.zero) = Bits.i Bits.e
+Nat.to_bits (n)                 = Bits.concat (Nat.to_bits (Nat.div n 2n)) (Nat.to_bits (Mod2 n))
+
+Bits.to_nat (b: Bits)   : Nat
+Bits.to_nat (Bits.e)    = 0n
+Bits.to_nat (Bits.o b)  = Bits.to_nat b
+Bits.to_nat (Bits.i b)  = Nat.add (Nat.pow 2n (Bits.length b)) (Bits.to_nat b)
+
+Iso (n: Nat)  : Equal Nat (Bits.to_nat (Nat.to_bits n)) n
+Iso (n) = 
+  (Nat.match n (n => Equal Nat (Bits.to_nat (Nat.to_bits (n))) (n))  
+    Equal.refl
+    (pred => 
+      let ind = Iso (Nat.succ pred)
+      ind
+    )
+  )
+
+Main {
+ // Mod2 5n
+ // (Bits.show (Nat.to_bits.aux 5n))
+ // ((Bits.to_nat (Nat.to_bits 10n)))
+ (Nat.show (Nat.div 2n 1n))
+ // List.show [1n, 2n, 4n, 5n, 99n]
+}
+
+Bits.show (b: Bits) : String
+Bits.show Bits.e = ""
+Bits.show (Bits.o b) = String.concat "0" (Bits.show b)
+Bits.show (Bits.i b) = String.concat "1" (Bits.show b)
+
+Nat.show (n: Nat) : String {
+  (Nat.to_string_base (U60.to_nat 10) n)
+}
+
+
+List.show (xs: List Nat) : String
+List.show xs = String.concat "[" (String.concat (List.show.aux xs) "]")
+
+List.show.aux (xs: List Nat) : String
+List.show.aux List.nil = ""
+List.show.aux (List.cons xs.h List.nil) = (Nat.show xs.h)
+List.show.aux (List.cons xs.h xs.t) =
+(String.concat (Nat.show xs.h)(String.concat "," (List.show.aux  xs.t) ))
+
+Bits.concat (b1: Bits) (b2: Bits) : Bits
+Bits.concat Bits.e b2 = b2
+Bits.concat (Bits.o b1) b2 = Bits.o (Bits.concat b1 b2)
+Bits.concat (Bits.i b1) b2 = Bits.i (Bits.concat b1 b2)
+
+
+Is_fst <a> <b> (p: Pair a b) : a
+Is_fst a b (Pair.new c d ) = c
+
+

@@ -1,0 +1,360 @@
+Succ_injective (n: Nat) (m: Nat) (e: Equal (Nat.succ n) (Nat.succ m)) : Equal n m
+Succ_injective Nat.zero Nat.zero e         = Equal.refl
+Succ_injective Nat.zero (Nat.succ m) e     = Equal.apply (x => Nat.pred x) e //Empty.absurd (Not_implies_our_not e)
+Succ_injective (Nat.succ n) Nat.zero e     = Equal.apply (x => Nat.pred x) e  //Empty.absurd (Not_implies_our_not e)
+Succ_injective (Nat.succ n) (Nat.succ m) e = Equal.apply (x => Nat.pred x) e
+
+Extract_lambda <p> <q> (f: p -> q) : p
+Extract_lambda p q f = (Invert_lambda f) (Apply_lambda f (Extract_lambda f))
+
+Apply_lambda <p> <q> (f: p -> q) (x: p) : q
+Apply_lambda p q f x = f (Extract_lambda f) 
+
+Invert_lambda <p> <q> (f: p -> q) : q -> p
+Invert_lambda p q f = (x: q) => (Extract_lambda f) 
+
+#axiom
+Either.rgt <l> <r> (e: Either l r) : r
+
+#axiom
+Either.lft <l> <r> (e: Either l r) : l
+
+Not_true_false    :  Not(Equal Bool Bool.true Bool.false)
+Not_true_false    = x => (Equal.rewrite x (k => if k { Nat } else { Empty }) Nat.zero)
+
+Zero_nbeq_plus_1  (n: Nat)      : (Equal Bool (Nat.equal Nat.zero (Nat.add n (Nat.succ Nat.zero))) Bool.false)
+Zero_nbeq_plus_1  Nat.zero      = Equal.refl
+Zero_nbeq_plus_1  (Nat.succ n)  = Equal.refl
+
+Contradiction_implies_anythig <p> <q> (a: Pair p (Not p)) : q
+Contradiction_implies_anythig p q (Pair.new fst snd) =
+  let app = snd fst
+  Empty.absurd app
+
+Not_true_is_false (b: Bool) (h: Not (Equal Bool b Bool.true)) : (Equal Bool b Bool.false)
+Not_true_is_false Bool.false h = Equal.refl
+Not_true_is_false Bool.true  h = Empty.absurd (h Equal.refl)
+
+Not_implies_our_not1 <p> (e: Not p) : p -> Empty
+Not_implies_our_not1 p e = e
+
+Not_implies_our_not <p> (e: p) : Empty
+Not_implies_our_not p e =  
+  let test  = (x: Not p) => Not_implies_our_not1 p (x)  
+  let test1 = Not_implies_our_not test
+  test1
+
+Confia <x> (e : x -> Type) : Type
+
+Evenb (n: Nat)              : Bool
+Evenb Nat.zero              = Bool.true
+Evenb (Nat.succ k)          = Bool.not (Evenb k)
+
+#partial
+Problems.t23 (n: Nat) (m: Nat) (e: Equal (Nat.equal n m) Bool.true): (Equal n m)
+Problems.t23 Nat.zero Nat.zero e            = Equal.refl 
+Problems.t23 (Nat.succ n) (Nat.succ m) e    =
+    let ind  = Problems.t23 n m e     
+    let app  = Equal.apply (x => (Nat.succ x)) ind 
+    app 
+
+
+// #############################################################################################
+// #################################### COMEÇA AQUI#############################################
+// #############################################################################################
+Andb_true_equiv 
+  (b1: Bool) 
+  (b2: Bool) : Equivalence (Equal (Bool.and b1 b2) Bool.true) (Pair (Equal b1 Bool.true) (Equal b2 Bool.true))
+Andb_true_equiv b1 b2 = Equivalence.new (x => Fro_andb_true_equiv b1 b2 x) (y => To_andb_true_equiv b1 b2 y)
+
+To_andb_true_equiv 
+  (b1: Bool) 
+  (b2: Bool) 
+  (e: (Pair (Equal b1 Bool.true) (Equal b2 Bool.true))) : (Equal (Bool.and b1 b2) Bool.true) 
+To_andb_true_equiv Bool.true  b2 e = Pair.snd e
+To_andb_true_equiv Bool.false b2 e = Pair.fst e
+
+Fro_andb_true_equiv 
+  (b1: Bool) 
+  (b2: Bool) 
+  (e: (Equal (Bool.and b1 b2) Bool.true)) : (Pair (Equal b1 Bool.true) (Equal b2 Bool.true))
+Fro_andb_true_equiv Bool.true  b2 e = Pair.new Equal.refl e
+Fro_andb_true_equiv Bool.false Bool.true e = 
+  let nff   = Equal.apply (x => Bool.not x) e
+  Pair.new e (Equal.chain nff e)
+Fro_andb_true_equiv Bool.false Bool.false e = Pair.new e e
+
+Orb_true_equiv 
+  (b1: Bool) 
+  (b2: Bool): Equivalence (Equal (Bool.or b1 b2) Bool.true) (Either (Equal b1 Bool.true) (Equal b2 Bool.true))
+Orb_true_equiv b1 b2 = Equivalence.new (x => To_orb_true_equiv b1 b2 x) (y => Fro_orb_true_equiv b1 b2 y)
+
+Fro_orb_true_equiv 
+  (b1: Bool) 
+  (b2: Bool) 
+  (e: Either (Equal b1 Bool.true) (Equal b2 Bool.true)) : Equal (Bool.or b1 b2) Bool.true
+Fro_orb_true_equiv Bool.true b2 e  = Either.lft e
+Fro_orb_true_equiv Bool.false b2 e = Either.rgt e
+
+To_orb_true_equiv 
+  (b1: Bool) 
+  (b2: Bool) 
+  (e: Equal (Bool.or b1 b2) Bool.true) : Either (Equal b1 Bool.true) (Equal b2 Bool.true)
+To_orb_true_equiv Bool.true b2 e  = Either.left  (Equal Bool.true Bool.true) (Equal b2 Bool.true) e
+To_orb_true_equiv Bool.false b2 e = Either.right (Equal Bool.false Bool.true)(Equal b2 Bool.true) e
+
+Fro_orb_true_equiv1 
+  (b1: Bool) 
+  (b2: Bool) 
+  (e: Equal b1 b2) : Equal (Bool.or b1 b2) Bool.true
+Fro_orb_true_equiv1 Bool.true b2          e = Equal.refl
+Fro_orb_true_equiv1 Bool.false Bool.true  e = Equal.refl
+Fro_orb_true_equiv1 Bool.false Bool.false e = 
+  let nff  = Equal.apply (x => Bool.not x) e
+  let test2 = (x: (Equal Bool.true Bool.true )) => (Not_implies_our_not x) 
+  let test = Not_true_is_false Bool.true test2
+  Equal.mirror test
+
+Beq_nat_false_equiv (n1: Nat) (n2: Nat) : Equivalence (Equal (Nat.equal n1 n2) Bool.false) (Not (Equal n1 n2))
+Beq_nat_false_equiv n1 n2 = Equivalence.new  (x => To_beq_nat_false n1 n2 x) (y => Fro_beq_nat_false n1 n2 y)
+
+Fro_beq_nat_false (n1: Nat) (n2: Nat) (e : Not (Equal n1 n2)) : (Equal (Nat.equal n1 n2) Bool.false)
+Fro_beq_nat_false Nat.zero Nat.zero e =  
+  Not_true_is_false Bool.true ((x: Equal Bool.true Bool.true) => (e Equal.refl))
+Fro_beq_nat_false Nat.zero (Nat.succ n2) e = Equal.refl
+Fro_beq_nat_false (Nat.succ n1) Nat.zero e = Equal.refl
+Fro_beq_nat_false (Nat.succ n1) (Nat.succ n2) e =
+  let test = (x: Equal (Nat.equal n1 n2) Bool.true) => Problems.t23 n1 n2 x
+  let test1 = Extract_lambda test
+  let test2 = Not_true_is_false Bool.true ((x: Equal Bool.true Bool.true) => (e (Extract_lambda e)))
+  Equal.chain test1 test2
+  // ?
+
+To_beq_nat_false (n1: Nat) (n2: Nat) (e : (Equal (Nat.equal n1 n2) Bool.false)) : Not (Equal n1 n2)
+To_beq_nat_false Nat.zero Nat.zero e           = (x: Equal  Nat.zero      Nat.zero)     => Not_implies_our_not x
+To_beq_nat_false Nat.zero (Nat.succ n2) e      = (x: Equal  Nat.zero     (Nat.succ n2)) => Not_implies_our_not x
+To_beq_nat_false (Nat.succ n1) Nat.zero e      = (x: Equal (Nat.succ n1)  Nat.zero)     => Not_implies_our_not x
+To_beq_nat_false (Nat.succ n1) (Nat.succ n2) e = (x: Equal (Nat.succ n1) (Nat.succ n2)) => Not_implies_our_not x
+
+// beq_list : (beq : a -> a -> Bool) -> (l1, l2 : List a) -> Bool
+// beq_list beq l1 l2 = ?beq_list_rhs
+Beq_list <a> (beq: a -> a -> Bool) (xs: List a) (ys: List a) : Bool
+Beq_list a beq List.nil List.nil = Bool.true
+Beq_list a beq List.nil (List.cons ys.h ys.t) = Bool.false
+Beq_list a beq (List.cons xs.h xs.t) List.nil = Bool.false
+Beq_list a beq (List.cons xs.h xs.t) (List.cons ys.h ys.t) = Beq_list a (xs.h => ys.h => beq xs.h ys.h) xs.t ys.t 
+
+// beq_list_true_iff : (beq : a -> a -> Bool) ->
+// ((a1, a2 : a) -> (beq a1 a2 = True) <-> (a1 = a2)) ->
+// ((l1, l2 : List a) -> (beq_list beq l1 l2 = True) <-> (l1 = l2))
+// beq_list_true_iff beq f l1 l2 = ?beq_list_true_iff_rhs
+Beq_list_true_equiv <a> 
+  (beq: a -> a -> Bool) 
+  (a1: a) 
+  (a2: a) 
+  (e: Equivalence (Equal (beq a1 a2) Bool.true) (Equal a1 a2))
+  (xs: List a)
+  (ys: List a): Equivalence (Equal (Beq_list beq xs ys) Bool.true) (Equal xs ys)
+Beq_list_true_equiv a beq a1 a2 e xs ys =
+  Equivalence.new  (x => Fro_beq_list_true a beq xs ys x)  ((y: Equal xs ys ) => To_beq_list_true beq xs ys)
+
+#partial
+To_beq_list_true <a> 
+  (beq: a -> a -> Bool) 
+  (xs: List a) 
+  (ys: List a) : Equal (Beq_list beq xs ys) Bool.true
+To_beq_list_true a beq List.nil List.nil = Equal.refl
+To_beq_list_true a beq List.nil (List.cons ys.h ys.t) = 
+  Equal.mirror (Not_true_is_false Bool.true ((x: Equal Bool.true Bool.true) => Not_implies_our_not x))
+To_beq_list_true a beq (List.cons xs.h xs.t) List.nil = 
+  Equal.mirror (Not_true_is_false Bool.true ((x: Equal Bool.true Bool.true) => Not_implies_our_not x))
+To_beq_list_true a beq (List.cons xs.h xs.t) (List.cons ys.h ys.t) = 
+  To_beq_list_true (xs.h => ys.h => beq xs.h ys.h) xs.t ys.t
+#partial
+Fro_beq_list_true <a> 
+  (beq: a -> a -> Bool) 
+  (xs: List a) 
+  (ys: List a) 
+  (e : (Equal (Beq_list beq xs ys) Bool.true)) : (Equal xs ys)
+Fro_beq_list_true a beq List.nil List.nil e = Equal.refl
+// Fro_beq_list_true a beq List.nil (List.cons ys.h ys.t) e =
+  // ?
+
+// forallb : (test : x -> Bool) -> (l : List x) -> Bool
+// forallb _ [] = True
+// forallb test (x :: xs) = test x && forallb test xs
+Forallb <x> (t: x -> Bool) (xs: List x) : Bool
+Forallb x t List.nil = Bool.true
+Forallb x t (List.cons xs.h xs.t) = Bool.and (t xs.h) (Forallb t xs.t)
+
+// All <x> (t: x -> Bool) (xs: List x) : Bool
+// All x t List.nil = Bool.true
+// All x t (List.cons xs.h xs.t) = Bool.if (t xs.h) (All t xs.t) Bool.false
+
+All <t> (p: t -> Type) (l: List t)  : Type
+All t p List.nil                    = Empty 
+All t p (List.cons xs.h xs.t)       = Pair (p xs.h) (All t p xs.t)
+
+// forallb_true_iff : (l : List x) -> (forallb test l = True) <-> (All (\x => test x = True) l)
+// forallb_true_iff l = ?forallb_true_iff_rhs
+Forallb_true_equiv <x> 
+  (t: x -> Bool) 
+  (xs: List x) : 
+  Equivalence (Equal (Forallb t xs) Bool.true) ((All ((k: x) => Equal (t k) Bool.true) xs))
+// Forallb_true_equiv x t xs = ?
+
+
+To_forall <x> (t: x -> Bool) (xs: List x) (e: Equal (Forallb t xs) Bool.true) : (All (k => (Equal (t k) Bool.true)) xs)
+// To_forall x t List.nil e              = Not_implies_our_not e
+// To_forall x t (List.cons xs.h xs.t) e =
+  // let a = Forallb t [xs.h]
+  // ?
+
+
+
+Bonatto_gosta_de_prova (gosta: Bool) : Equal gosta Bool.true
+Bonatto_gosta_de_prova Bool.true = Equal.refl
+Bonatto_gosta_de_prova Bool.false =
+  Equal.mirror (Not_true_is_false Bool.true (Not_implies_our_not1 ((x: Equal Bool.true Bool.true) => Not_implies_our_not x)) )
+
+// Excluded_middle p = Confia ?
+
+
+// restricted_excluded_middle: (p <-> b = True) -> p Either Not p
+// restricted_excluded_middle {b = True} (_, bp) = Left $ bp Refl
+// restricted_excluded_middle {b = False} (pb, _) = Right $ uninhabited . pb
+
+Restricted_excluded_middle <p> <q> (b: Bool)(e: Equivalence p (Equal b Bool.true)) : Either p (Not p) 
+Restricted_excluded_middle p q Bool.true  (Equivalence.new pb bp) = Either.left (bp Equal.refl)
+Restricted_excluded_middle p q Bool.false (Equivalence.new pb bp) = Either.right (Empty.absurd (Not_implies_our_not pb))
+
+
+
+// restricted_excluded_middle_eq : (n, m : Nat) -> (n = m) `Either` Not (n = m)
+// restricted_excluded_middle_eq n m =
+// restricted_excluded_middle (to n m, fro n m)
+
+// where
+// to : (n, m : Nat) -> (n=m) -> (n==m)=True
+// to Z Z prf = Refl
+// to Z (S _) Refl impossible
+// to (S _) Z Refl impossible
+// to (S k) (S j) prf = to k j (succInjective k j prf)
+
+// fro : (n, m : Nat) -> (n==m)=True -> (n=m)
+// fro Z Z Refl = Refl
+// fro Z (S _) Refl impossible
+// fro (S _) Z Refl impossible
+// fro (S k) (S j) prf = rewrite fro k j prf in Refl
+
+Restricted_excluded_middle_eq (n: Nat) (m: Nat) : Either (Equal n m) (Not (Equal n m))
+Restricted_excluded_middle_eq n m = 
+Restricted_excluded_middle (Nat.equal n m) (Equivalence.new (x => To_reme n m x) (y => From_reme n m y))
+
+To_reme (n: Nat) (m: Nat) (e: Equal n m) : Equal (Nat.equal n m) Bool.true
+To_reme Nat.zero Nat.zero e         = Equal.refl
+To_reme Nat.zero (Nat.succ m) e     = Empty.absurd (Not_implies_our_not e)
+To_reme (Nat.succ n) Nat.zero e     = Empty.absurd (Not_implies_our_not e)
+To_reme (Nat.succ n) (Nat.succ m) e = To_reme n m (Succ_injective n m e)
+
+From_reme (n: Nat) (m: Nat) (e: Equal (Nat.equal n m) Bool.true) : Equal n m
+From_reme Nat.zero Nat.zero e         = Equal.refl
+From_reme Nat.zero (Nat.succ m) e     = Empty.absurd (Not_implies_our_not e)
+From_reme (Nat.succ n) Nat.zero e     = Empty.absurd (Not_implies_our_not e)
+From_reme (Nat.succ n) (Nat.succ m) e = Equal.apply (x => Nat.succ x) (From_reme n m e)
+
+
+// excluded_middle_irrefutable : Not $ Not (p `Either` Not p)
+// excluded_middle_irrefutable = ?excluded_middle_irrefutable_rhs
+Excluded_middle_irrefutable <p> : Not (Not (Either p (Not p)))
+Excluded_middle_irrefutable p =  (x: Not (Either p (Not p))) => Not_implies_our_not x
+
+
+// not_exists_dist : {p : a -> Type} -> Not (x ** Not $ p x) -> ((x : a) -> p x)
+// not_exists_dist prf x = ?not_exists_dist_rhs
+Not_exists_dist <a> (p: a -> Type) (s: Not (Sigma a (k => Not (p k)))) : (x: a) -> p x
+Not_exists_dist a p s = (y: a) => (
+  let either = Excluded_middle (p y)
+  let test = match Either either {
+    left  => Either.left  (p y) ((x: p y) -> Empty) either.val
+    right => Either.right (p y) ((x: p y) -> Empty) either.val
+  }
+  let fim = match Either test {
+    left  => test.val
+    right => Either.lft test
+  }
+ fim
+ // ?
+)
+
+
+
+Excluded_middle <p>: Either p (Not p)
+
+// peirce : ((p -> q) -> p) -> p
+Peirce <p> <q>(pq: (p -> q) -> p) : p
+Peirce p q pq = 
+  let test = Excluded_middle p
+  let either = match Either test {
+    left  => test.val
+    right => Either.lft test
+  }  
+  either
+  // ?
+
+
+// double_negation_elimination : Not $ Not p -> p
+Double_negation_elimination <p> (np: Not (Not p)) : p
+Double_negation_elimination p np =
+  let exm = Excluded_middle p
+  (Either.lft exm)
+
+// de_morgan_not_and_not : Not (Not p, Not q) -> p `Either` q
+De_morgan_not_not <p> <q> (np: Pair (Not p) (Not q)) : Either p q
+De_morgan_not_not p q (Pair.new fst snd) =
+  let excm = Excluded_middle p
+  let exm1 = Excluded_middle q
+  let test2 = Either.new (excm) (exm1)
+  test2
+  // ?
+
+
+// implies_to_or : (p -> q) -> ((Not p) `Either` q)
+Implies_to_or <p> <q> (pq: p -> q) : Either (Not p) q
+// Implies_to_or p q pq = ?
+
+#partial
+Either.new <p> <q> (e1: Either p (Not p)) (e2: Either q (Not q)) : Either p q
+Either.new p q (Either.left fst snd val1) (Either.left trd fth val2) = Either.new.aux val1 val2
+// Either.new p q (Either.left fst snd val1) (Either.right trd fth val2) =
+  // let pe = specialize fst into #0 in val1
+  // let qe = specialize fst into #0 in val1
+  // ?
+  
+// Either.new p q (Either.right fst snd val1) (Either.right trd fth val2) = ?
+// Either.new p q (Either.right fst snd val1) (Either.left trd fth val2) = ?
+
+
+
+Either.new.aux <p> <q> (p1: p) (q1: q) : Either p q
+Either.new.aux p q p1 q1 = Either.left  p q p1
+// Either.new.aux p q p1 q1 = Either.right p q q1
+
+// Not_not_sigma <a> (p: a -> Type) (s: Not (Sigma a (k => Not (p k)))) : Sigma a (k => (p k))
+
+Even_bool_prop (n: Nat): 
+  Equivalence (Equal (Evenb n) Bool.true) (Sigma Nat (k => Equal n (Nat.double k)))
+Even_bool_prop n = Equivalence.new (x => To_even_bool_prop n x) (y => Fro_even_bool_prop n y)
+
+To_even_bool_prop (n: Nat) (e : (Equal (Evenb n) Bool.true)) : (Sigma Nat (k => (Equal _ n (Nat.double k))))
+To_even_bool_prop Nat.zero Equal.refl = Sigma.new 0n Equal.refl
+To_even_bool_prop (Nat.succ Nat.zero) e = Sigma.new ? ?
+
+Fro_even_bool_prop (n: Nat) (s: Sigma Nat (k => (Equal n (Nat.double k)))) : Equal _ (Evenb n) Bool.true
+
+
+Main {
+  Evenb 2n  
+}
+
+  // specialize confia into #0 in ? //test2
