@@ -12,11 +12,31 @@ type Ev ~ (n: Nat){
   // wrong_ev_ss (pred: Ev n) : Ev (Nat.succ (Nat.succ n))
 // }
 
+
+Isnt_even <p> (n: Nat) (e: Ev n) : Empty -> p
+Isnt_even n e = (x: Empty) => Empty.absurd x 
+
 Ev_4 : Ev 4n
 Ev_4 = Ev.ev_ss 2n (Ev.ev_ss 0n Ev.ev_z)
 
 Ev_plus5 (n: Nat) : Ev n -> Ev (Nat.add 4n n)
 Ev_plus5 n = x => Ev.ev_ss (Ev.ev_ss x)
+
+IsEven (n: Nat) : Type
+IsEven Nat.zero = Unit
+IsEven (Nat.succ Nat.zero) = Empty
+IsEven (Nat.succ (Nat.succ n)) = IsEven n
+
+ToEmpty (a: Type) : Empty
+// ToEmpty a =
+// (Equal.rewrite chn_mir
+    // (x => match Nat x {
+      // zero => Unit
+      // succ => Empty
+    // })
+    // (Unit.new))
+  // Empty.absurd absurdo
+// ?
 
 #partial
 Ev_minus2 (n: Nat) (e: Ev n) : Ev (Nat.pred (Nat.pred n))
@@ -28,15 +48,15 @@ Ev_minus2 (Nat.succ (Nat.succ n)) (Ev.ev_ss e) = e
 #partial
 Ev_prop (n: Nat) : Ev (Nat.pred (Nat.pred (Nat.succ (Nat.succ n))))
 Ev_prop Nat.zero = Ev.ev_z
-// Ev_prop (Nat.succ Nat.zero) = Absurdo
+Ev_prop (Nat.succ Nat.zero) = Empty.absurd (ToEmpty (IsEven 1n))
 Ev_prop (Nat.succ (Nat.succ n)) = Ev.ev_ss (Ev_prop n)
 
 
 #partial
 Evss_ev (n: Nat) (e: Ev (Nat.succ (Nat.succ n))) : Ev n
-// Evss_ev Nat.zero e = Ev.ev_z
-// Evss_ev (Nat.succ Nat.zero) (Ev.ev_ss e) = e
-// Evss_ev (Nat.succ n) (Ev.ev_ss e)  = e
+Evss_ev Nat.zero e = Ev.ev_z
+Evss_ev (Nat.succ Nat.zero) (Ev.ev_ss e) = e
+Evss_ev (Nat.succ n) (Ev.ev_ss e)  = e
 // Evss_ev n (Ev.ev_z) = ?
 Evss_ev n (Ev.ev_ss e) = e 
 
@@ -47,6 +67,19 @@ One_not_even : Not (Ev 1n)
 One_not_even = Empty.absurd _
 
 Absurd <p> (x: p) : Empty
+Absurd p x = Absurd.not (Absurd.not.aux p x)
+
+Absurd.not <p> (x: p -> Empty) : Empty
+// Absurd.not p (x) =
+
+Absurd.not.aux <p> (x: p) : p -> Empty
+// Absurd.not.aux p x =
+
+
+Absurdo <p> (x: p) : Empty -> p
+Absurdo p x = (e: Empty) => x
+
+
 
 // SSSSev__even : Ev (S (S (S (S n)))) -> Ev n
 // SSSSev__even e = ?SSSSev__even_rhs
@@ -65,12 +98,13 @@ Even5_nonsense e = Empty.absurd (Absurd e)
 // Ev_even : Ev n -> (k ** n = double k)
 #partial
 Ev_even 
-  (n: Nat) 
+  (n: Nat)
   (e: Ev n) :
   (Sigma Nat(k => Equal n ( Nat.double k)))
 Ev_even Nat.zero e = Sigma.new 0n Equal.refl
-// Ev_even (Nat.succ Nat.zero) e = ABSURDO!!!
+Ev_even (Nat.succ Nat.zero) e = Empty.absurd _
 Ev_even (Nat.succ (Nat.succ n)) (Ev.ev_ss e) = Ev_even_ss n (Ev_even n e)
+// Ev_even (Nat.succ (Nat.succ n)) Ev.ev_z = ?
 
 Ev_even_ss 
   (n: Nat)
@@ -103,6 +137,39 @@ Ev_sum (Nat.succ (Nat.succ n)) m (Ev.ev_ss e1) e2 =
   let test = Ev_sum n m e1 e2
   Ev.ev_ss test
   // ?
+
+#derive[match]
+type Evn ~ (n: Nat){
+  z : Evn Nat.zero
+  d : Evn (Nat.succ (Nat.succ Nat.zero))
+  sum <n : Nat> <m: Nat> (evn: Evn n) (evm: Evn m) : Evn (Nat.add n m)
+}
+
+
+Ev_evn (n: Nat): Equivalence (Ev n) (Evn n)
+
+#partial
+To_ev_evn (n: Nat) (e : Ev n) : (Evn n)
+To_ev_evn Nat.zero e = Evn.z
+To_ev_evn (Nat.succ Nat.zero) e = Empty.absurd _
+To_ev_evn (Nat.succ (Nat.succ n)) (Ev.ev_ss e) = 
+  let ind = To_ev_evn n e
+  let test = Evn.sum ind Evn.d
+  let sum = Sum2 n
+  let rwt = Equal.rewrite (sum) (x => (Evn (x))) test
+  rwt
+  // ?
+
+Sum2 (n: Nat)     : Equal (Nat.add n 2n) (Nat.succ (Nat.succ n))
+Sum2 Nat.zero     = Equal.refl
+Sum2 (Nat.succ n) = Equal.apply (x => Nat.succ x) (Sum2 n)
+
+From_ev_evn  (n: Nat) (e : Evn n) : (Ev n)
+From_ev_evn Nat.zero e = Ev.ev_z
+From_ev_evn (Nat.succ (Nat.succ n)) e = 
+  let ind = From_ev_evn n ?
+  ?
+
 
 Main {
   // "Hello Word"

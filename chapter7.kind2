@@ -1,0 +1,797 @@
+// use Data.Nat as Nat
+
+Or_false <a : Data.Bool> <b : Data.Bool> (afls : Prop.Equal a Data.Bool.false) (eq : Prop.Equal (Data.Bool.or a b) Data.Bool.true) : Prop.Equal b Data.Bool.true
+Or_false a b afls eq = Prop.Equal.rewrite afls (x => Prop.Equal Data.Bool (Data.Bool.or x b) Data.Bool.true) eq
+// ?
+  // Data.Sigma.new (_) (Expmatch.mapp (?) _)
+
+Not_true_is_false (b: Data.Bool) (e: Prop.Not (Prop.Equal Data.Bool b Data.Bool.true)) : Prop.Equal Data.Bool b Data.Bool.false
+Not_true_is_false Data.Bool.false e = Prop.Equal.refl
+Not_true_is_false Data.Bool.true e  = Data.Empty.absurd (e Prop.Equal.refl)
+
+Bool.and_first 
+  <a: Data.Bool> 
+  <b: Data.Bool> 
+  (e: Prop.Equal (Data.Bool.and a b) Data.Bool.true)
+  : Prop.Equal a Data.Bool.true
+Bool.and_first Data.Bool.true Data.Bool.true  e = e
+Bool.and_first Data.Bool.false b e              = Data.Empty.absurd (Data.Bool.false_not_true e)
+Bool.and_first Data.Bool.true Data.Bool.false e = Data.Empty.absurd (Data.Bool.false_not_true e)
+  
+Bool.and_second 
+  <a: Data.Bool> 
+  <b: Data.Bool> 
+  (e: Prop.Equal (Data.Bool.and a b) Data.Bool.true)
+  : Prop.Equal b Data.Bool.true
+Bool.and_second Data.Bool.true Data.Bool.true  e = e
+Bool.and_second Data.Bool.true Data.Bool.false e = Data.Empty.absurd (Data.Bool.false_not_true e)
+Bool.and_second Data.Bool.false b e              = Data.Empty.absurd (Data.Bool.false_not_true e)
+
+Bool.and2 
+  <b1: Data.Bool>
+  <b2: Data.Bool>
+  (e1: Prop.Equal b1 Data.Bool.true)
+  (e2: Prop.Equal b2 Data.Bool.true)
+  : Prop.Equal (Data.Bool.and b1 b2) Data.Bool.true
+Bool.and2 Data.Bool.true  b2 e1 e2 = e2
+Bool.and2 Data.Bool.false b2 e1 e2 = e1
+  // ?
+
+Bool.or2 
+  <b1: Data.Bool>
+  <b2: Data.Bool>
+  (e1: Prop.Equal b1 Data.Bool.true)
+  (e2: Prop.Equal b2 Data.Bool.true)
+  : Prop.Equal (Data.Bool.or b1 b2) Data.Bool.true
+Bool.or2 Data.Bool.true  b2 e1 e2 = e1
+Bool.or2 Data.Bool.false b2 e1 e2 = e2
+
+
+In_map <a> <b> (f: a -> b) (xs: Data.List a) (x: a) (i: In x xs) : In (f x) (Data.List.map xs f) 
+In_map a b f (Data.List.nil) x i = Data.Empty.absurd i
+In_map a b f (Data.List.cons xs.h xs.t) x (Data.Either.right e) = Data.Either.right (In_map f xs.t x e)
+In_map a b f (Data.List.cons xs.h xs.t) x (Data.Either.left e)  = 
+    (Prop.Equal.rewrite e 
+    (y => (Data.Either (Prop.Equal (f x) (f y)) (In (f x) (Data.List.map xs.t f)))) 
+    (Data.Either.left Prop.Equal.refl))
+
+
+Foo2 
+  (m: Data.Nat) 
+  (n: Data.Nat) 
+  : Prop.Equal (Data.Nat.succ (Data.Nat.add m n)) (Data.Nat.add (Data.Nat.succ m) n)
+Foo2  Data.Nat.zero    n = Prop.Equal.refl
+Foo2 (Data.Nat.succ m) n = 
+  let ind = Foo2 m n
+  let app = Prop.Equal.apply (x => Data.Nat.succ x) ind
+  app
+  // ?
+
+List.show (xs: Data.List Data.U60) : Data.String
+List.show xs = Data.String.concat "[" (Data.String.concat (List.show.aux xs) "]")
+
+List.show.aux (xs: Data.List Data.U60) : Data.String
+List.show.aux Data.List.nil = ""
+List.show.aux (Data.List.cons xs.h Data.List.nil) = (U60.show xs.h)
+List.show.aux (Data.List.cons xs.h xs.t) =
+(Data.String.concat (Data.String.concat (U60.show xs.h) "," ) (List.show.aux  xs.t) )
+
+U60.show (n: Data.U60) : Data.String
+U60.show n = Data.String.reverse (U60.show.go n)
+
+U60.show.go (n: Data.U60) : Data.String
+U60.show.go 0 = Data.String.cons '0' Data.String.nil
+U60.show.go 1 = Data.String.cons '1' Data.String.nil
+U60.show.go 2 = Data.String.cons '2' Data.String.nil
+U60.show.go 3 = Data.String.cons '3' Data.String.nil
+U60.show.go 4 = Data.String.cons '4' Data.String.nil
+U60.show.go 5 = Data.String.cons '5' Data.String.nil
+U60.show.go 6 = Data.String.cons '6' Data.String.nil
+U60.show.go 7 = Data.String.cons '7' Data.String.nil
+U60.show.go 8 = Data.String.cons '8' Data.String.nil
+U60.show.go 9 = Data.String.cons '9' Data.String.nil
+U60.show.go n =
+  if (Data.U60.to_bool(< n 10)) {(U60.show.go n)}
+    else {Data.String.cons (+ 48 (% n 10)) (U60.show.go (/ n 10)) }
+
+#derive[match]
+record Equivalence (p) (q) {
+	lft: p -> q 
+	rgt: q -> p
+}
+
+
+Cong <a> <b> (f: a -> b) (x: a) (y: a) (e: Prop.Equal x y) : Prop.Equal (f x) (f y)
+Cong a b f x y e = Prop.Equal.apply (k => f k) e
+
+#derive[match]
+type Ev ~ (n: Data.Nat){
+  ev_z : Ev Data.Nat.zero
+  ev_ss <n : Data.Nat> (pred: Ev n) : Ev (Data.Nat.succ (Data.Nat.succ n))
+}
+
+// type Wrong_ev ~ (n: Data.Nat){
+  // wrong_ev_z : Ev Data.Nat.zero
+  // wrong_ev_ss (pred: Ev n) : Ev (Data.Nat.succ (Data.Nat.succ n))
+// }
+
+
+Isnt_even <p> (n: Data.Nat) (e: Ev n) : Data.Empty -> p
+Isnt_even n e = (x: Data.Empty) => Data.Empty.absurd x
+
+Ev_4 : Ev 4n
+Ev_4 = Ev.ev_ss 2n (Ev.ev_ss 0n Ev.ev_z)
+
+Ev_plus5 (n: Data.Nat) : Ev n -> Ev (Data.Nat.add 4n n)
+Ev_plus5 n = x => Ev.ev_ss (Ev.ev_ss x)
+
+IsEven (n: Data.Nat) : Type
+IsEven Data.Nat.zero = Data.Unit
+IsEven (Data.Nat.succ Data.Nat.zero) = Data.Empty
+IsEven (Data.Nat.succ (Data.Nat.succ n)) = IsEven n
+
+ToEmpty (a: Type) : Data.Empty
+
+#partial
+Ev_minus2 (n: Data.Nat) (e: Ev n) : Ev (Data.Nat.pred (Data.Nat.pred n))
+Ev_minus2 Data.Nat.zero e = e
+Ev_minus2 (Data.Nat.succ Data.Nat.zero) e = Ev.ev_z
+Ev_minus2 (Data.Nat.succ (Data.Nat.succ n)) (Ev.ev_ss e) = e
+// Ev_minus2 (Data.Nat.succ (Data.Nat.succ n)) (Ev.ev_z) = ?
+
+#partial
+Ev_prop (n: Data.Nat) : Ev (Data.Nat.pred (Data.Nat.pred (Data.Nat.succ (Data.Nat.succ n))))
+Ev_prop Data.Nat.zero = Ev.ev_z
+Ev_prop (Data.Nat.succ Data.Nat.zero) = Data.Empty.absurd (ToEmpty (IsEven 1n))
+Ev_prop (Data.Nat.succ (Data.Nat.succ n)) = Ev.ev_ss (Ev_prop n)
+
+
+#partial
+Evss_ev (n: Data.Nat) (e: Ev (Data.Nat.succ (Data.Nat.succ n))) : Ev n
+Evss_ev Data.Nat.zero e = Ev.ev_z
+Evss_ev (Data.Nat.succ Data.Nat.zero) (Ev.ev_ss e) = e
+Evss_ev (Data.Nat.succ n) (Ev.ev_ss e)  = e
+// Evss_ev n (Ev.ev_z) = ?
+Evss_ev n (Ev.ev_ss e) = e
+
+// one_not_even : Prop.Not (Ev 1)
+// one_not_even Ev_0 impossible
+// one_not_even (Ev_SS _) impossible
+One_not_even : Prop.Not (Ev 1n)
+One_not_even = Data.Empty.absurd _
+
+Absurd <p> (x: p) : Data.Empty
+Absurd p x = Absurd.not (Absurd.not.aux p x)
+
+Absurd.not <p> (x: p -> Data.Empty) : Data.Empty
+// Absurd.not p (x) =
+
+Absurd.not.aux <p> (x: p) : p -> Data.Empty
+// Absurd.not.aux p x =
+
+
+Absurdo <p> (x: p) : Data.Empty -> p
+Absurdo p x = (e: Data.Empty) => x
+
+
+
+// SSSSev__even : Ev (S (S (S (S n)))) -> Ev n
+// SSSSev__even e = ?SSSSev__even_rhs
+Ssssev__even (n: Data.Nat) (e: Ev (Data.Nat.succ (Data.Nat.succ (Data.Nat.succ (Data.Nat.succ n))))) : Ev n
+Ssssev__even n e =
+  let test  = Evss_ev (Data.Nat.succ (Data.Nat.succ n)) e
+  let test2 = Evss_ev n test
+  test2
+
+// even5_nonsense : Ev 5 -> 2 + 2 = 9
+// even5_nonsense e = ?even5_nonsense_rhs
+Even5_nonsense (e: Ev 5n) : Prop.Equal (Data.Nat.add 2n 2n) 9n
+Even5_nonsense e = Data.Empty.absurd (Absurd e)
+
+
+// Ev_even : Ev n -> (k ** n = double k)
+#partial
+Ev_even
+  (n: Data.Nat)
+  (e: Ev n) :
+  (Data.Sigma Data.Nat(k => Prop.Equal n ( Data.Nat.double k)))
+Ev_even Data.Nat.zero e = Data.Sigma.new 0n Prop.Equal.refl
+Ev_even (Data.Nat.succ Data.Nat.zero) e = Data.Empty.absurd _
+Ev_even (Data.Nat.succ (Data.Nat.succ n)) (Ev.ev_ss e) = Ev_even_ss n (Ev_even n e)
+// Ev_even (Data.Nat.succ (Data.Nat.succ n)) Ev.ev_z = ?
+
+Ev_even_ss
+  (n: Data.Nat)
+  (s: Data.Sigma Data.Nat (k => Prop.Equal n (Data.Nat.double k)) )
+  :(Data.Sigma Data.Nat (k => (Prop.Equal (Data.Nat.succ (Data.Nat.succ n)) (Data.Nat.double k))))
+Ev_even_ss Data.Nat.zero s = Data.Sigma.new 1n Prop.Equal.refl
+Ev_even_ss n (Data.Sigma.new a b fst snd) =
+  let cong1 = (Prop.Equal.apply (x => Data.Nat.succ x) (specialize b into #0 in snd))
+  let cong2 = Prop.Equal.apply (x => Data.Nat.succ x) cong1
+  Data.Sigma.new (Data.Nat.succ fst) cong2
+
+Ev_double (n: Data.Nat)      : Ev (Data.Nat.double n)
+Ev_double Data.Nat.zero      = Ev.ev_z
+Ev_double (Data.Nat.succ n)  = Ev.ev_ss (Ev_double n)
+
+Ev_even_equiv (n: Data.Nat)  : Equivalence (Ev n) (Data.Sigma Data.Nat (k => Prop.Equal n (Data.Nat.double k)))
+Ev_even_equiv n         = Equivalence.new (x => Ev_even n x) (y => From_eee n y)
+
+From_eee (n: Data.Nat) (s: Data.Sigma Data.Nat (k => Prop.Equal n (Data.Nat.double k))) : Ev n
+From_eee n (Data.Sigma.new a b fst snd) =
+  Prop.Equal.rewrite (Prop.Equal.mirror (specialize b into #0 in snd)) (x =>(Ev x)) (Ev_double fst)
+
+// ev_sum : Ev n -> Ev m -> Ev (n + m)
+// ev_sum x y = ?ev_sum_rhs
+#partial
+Ev_sum (n: Data.Nat) (m: Data.Nat) (e1: Ev n) (e2: Ev m) : Ev (Data.Nat.add n m)
+Ev_sum Data.Nat.zero m e1 e2 = e2
+// Ev_sum (Data.Nat.succ Data.Nat.zero) m e1 e2 = ABSURDO!!!
+Ev_sum (Data.Nat.succ (Data.Nat.succ n)) m (Ev.ev_ss e1) e2 =
+  let test = Ev_sum n m e1 e2
+  Ev.ev_ss test
+  // ?
+
+#derive[match]
+type Evn ~ (n: Data.Nat){
+  z : Evn Data.Nat.zero
+  d : Evn (Data.Nat.succ (Data.Nat.succ Data.Nat.zero))
+  sum <n : Data.Nat> <m: Data.Nat> (evn: Evn n) (evm: Evn m) : Evn (Data.Nat.add n m)
+}
+
+
+Ev_evn (n: Data.Nat): Equivalence (Ev n) (Evn n)
+Ev_evn n = Equivalence.new (x => To_ev_evn n x) (y => From_ev_evn n y)
+
+#partial
+To_ev_evn (n: Data.Nat) (e : Ev n) : (Evn n)
+To_ev_evn Data.Nat.zero e = Evn.z
+To_ev_evn (Data.Nat.succ Data.Nat.zero) e = Data.Empty.absurd _
+To_ev_evn (Data.Nat.succ (Data.Nat.succ n)) (Ev.ev_ss e) =
+  let ind = To_ev_evn n e
+  let test = Evn.sum ind Evn.d
+  let sum = Sum2 n
+  let rwt = Prop.Equal.rewrite (sum) (x => (Evn (x))) test
+  rwt
+  // ?
+
+Sum2 (n: Data.Nat)     : Prop.Equal (Data.Nat.add n 2n) (Data.Nat.succ (Data.Nat.succ n))
+Sum2 Data.Nat.zero     = Prop.Equal.refl
+Sum2 (Data.Nat.succ n) = Prop.Equal.apply (x => Data.Nat.succ x) (Sum2 n)
+
+From_ev_evn  (n: Data.Nat) (e : Evn n) : (Ev n)
+From_ev_evn Data.Nat.zero e = Ev.ev_z
+From_ev_evn (Data.Nat.succ Data.Nat.zero) e = Data.Empty.absurd _
+From_ev_evn (Data.Nat.succ (Data.Nat.succ n)) e =
+  let e1 = Evn n
+  let ind = From_ev_evn n (Evn_ss n e)
+  let test = Ev.ev_ss ind
+  test
+  // ?
+
+#partial
+Evn_ss (n: Data.Nat) (e: Evn (Data.Nat.succ (Data.Nat.succ n))) : Evn n
+Evn_ss Data.Nat.zero (e) = Evn.z
+// Evn_ss (Data.Nat.succ Data.Nat.zero) (e) = Data.Empty.absurd _
+Evn_ss (Data.Nat.succ (Data.Nat.succ n)) (Evn.sum (Data.Nat.succ (Data.Nat.succ (Data.Nat.zero))) (Data.Nat.succ (Data.Nat.succ e)) a b)  = b
+
+// ev_ev__ev : Ev (n+m) -> Ev n -> Ev m
+// ev_ev__ev x y = ?ev_ev__ev_rhs
+#partial
+Ev_ev_ev (n: Data.Nat) (m: Data.Nat) (e: Ev (Data.Nat.add n m)) (en: Ev n) : Ev m
+Ev_ev_ev Data.Nat.zero m e en = e
+Ev_ev_ev (Data.Nat.succ (Data.Nat.zero)) m e en = Data.Empty.absurd _
+// Ev_ev_ev (Data.Nat.succ (Data.Nat.succ n)) m Ev.ev_z e = ?
+Ev_ev_ev (Data.Nat.succ (Data.Nat.succ n)) m (Ev.ev_ss e) (Ev.ev_ss en) = 
+  let ind = Ev_ev_ev n m e en
+  ind
+
+// ev_plus_plus : Ev (n+m) ౏> Ev (n+p) ౏> Ev (m+p)
+#partial
+Ev_pp 
+  <n: Data.Nat> 
+  <m: Data.Nat> 
+  <p: Data.Nat> 
+  (e1: Ev (Data.Nat.add n m))
+  (e2: Ev (Data.Nat.add n p))
+  : Ev (Data.Nat.add m p)
+Ev_pp Data.Nat.zero m p e1 e2 = Ev_sum m p e1 e2
+// Ev_pp (Data.Nat.succ Data.Nat.zero) m p e1 e2 =  CASO ABSURDO
+Ev_pp (Data.Nat.succ (Data.Nat.succ n)) m p e1 e2 =
+  let e3 = Evss_ev (Data.Nat.add n m) e1
+  let e4 = Evss_ev (Data.Nat.add n p) e2
+  let ind = Ev_pp n m p e3 e4
+  ind
+  // ?
+//
+// type Regexp (t: Type) {
+//     emptyset
+//     emptystr
+//     chr   (h: t)
+//     app   (st1: Regexp t) (st2: Regexp t)
+//     union (st1: Regexp t) (st2: Regexp t)
+//     star  (st1: Regexp t)
+//   }
+//
+// #derive[match]
+// type Expmatch <t> ~(xs: Data.List t) (r: Regexp t) {
+//   mempty              : Expmatch t []   Regexp.emptystr
+//   mchar (x: t)        : Expmatch t [x] (Regexp.chr x)
+//   mapp
+//     <s1: Data.List t>
+//     <r1: Regexp t>
+//     (e1: Expmatch s1 r1)
+//     <s2: Data.List t>
+//     <r2: Regexp t>
+//     (e2: Expmatch t s2 r2)
+//     : Expmatch t (Data.List.concat s1 s2) (Regexp.app r1 r2)
+//   munionl
+//     (s1: Data.List t)
+//     (s2: Data.List t)
+//     (r1: Regexp t)
+//     (r2: Regexp t)
+//     : Expmatch t s1 (Regexp.union r1 r2)
+//   munionr
+//     (s1: Data.List t)
+//     (s2: Data.List t)
+//     (r1: Regexp t)
+//     (r2: Regexp t)
+//     : Expmatch t s2 (Regexp.union r1 r2)
+//   mstarz (r: Regexp t) : Expmatch t [] (Regexp.star r)
+//   mstarapp
+//     <s1: Data.List t>
+//     <s2: Data.List t>
+//     <r1: Regexp t>
+//     (e1: Expmatch s1 r1)
+//     (e2: Expmatch s2 (Regexp.star r1))
+//     : Expmatch t (Data.List.concat s1 s2) (Regexp.star r1)
+// }
+#derive[match]
+type Regexp (t: Type) {
+    emptyset                              
+    emptystr                              
+    chr   (h: t)                          
+    app   (st1: Regexp t) (st2: Regexp t) 
+    union (st1: Regexp t) (st2: Regexp t) 
+    star  (st1: Regexp t)                 
+  }
+
+#derive[match]
+type Expmatch <t> ~(xs: Data.List t) (r: Regexp t) {
+  mempty              : Expmatch t []   Regexp.emptystr 
+  mchar (x: t)        : Expmatch t [x] (Regexp.chr x)
+  mapp 
+    <s1: Data.List t>
+    <s2: Data.List t>
+    <re1: Regexp t>
+    <re2: Regexp t>
+    (e1: Expmatch t s1 re1)
+    (e2: Expmatch t s2 re2)
+    : Expmatch t (Data.List.concat t s1 s2) (Regexp.app re1 re2)
+  munionl 
+    <s1: Data.List t> 
+    (re1: Regexp t) 
+    (re2: Regexp t)
+    (e1: Expmatch t s1 re1)
+    : Expmatch t s1 (Regexp.union re1 re2)
+  munionr 
+    (re1: Regexp t) 
+    <s2: Data.List t> 
+    (re2: Regexp t)
+    (e1: Expmatch t s2 re2)
+    : Expmatch t s2 (Regexp.union re1 re2)
+  mstarz (r: Regexp t) : Expmatch t [] (Regexp.star r)  
+  mstarapp 
+    <s1: Data.List t> 
+    <s2: Data.List t>
+    <r1: Regexp t>
+    (e1: Expmatch s1 r1)
+    (e2: Expmatch s2 (Regexp.star r1))
+    : Expmatch t (Data.List.concat t s1 s2) (Regexp.star r1)
+}
+
+
+Regexp_ex1 : Expmatch [1] (Regexp.chr 1)
+Regexp_ex1 = Expmatch.mchar 1 
+
+// Regexp_ex2 : Expmatch [1, 2] (Regexp.app (Regexp.chr 1) (Regexp.chr 2))
+// Regexp_ex2 = Expmatch.mapp [1] (Regexp.chr 1) (Expmatch.mchar 1) [2] (Regexp.chr 2) (Expmatch.mchar 2)
+
+Regexp_ex3 : Prop.Not (Expmatch [1, 2] (Regexp.chr 1))
+Regexp_ex3 = Data.Empty.absurd _
+
+Regexp_of_list <t> (xs: Data.List t)        : Regexp t
+Regexp_of_list t Data.List.nil              = Regexp.emptystr
+Regexp_of_list t (Data.List.cons xs.h xs.t) = Regexp.app (Regexp.chr xs.h) (Regexp_of_list t xs.t)
+
+Regexp_of_list2 <t> (xs: Data.List t)        : Regexp t
+Regexp_of_list2 t Data.List.nil              = Regexp.emptyset
+Regexp_of_list2 t (Data.List.cons xs.h xs.t) = Regexp.app (Regexp.chr xs.h) (Regexp_of_list t xs.t)
+//
+// Regexp_ex4 : Expmatch [1, 2, 3] (Regexp_of_list2 [1, 2, 3])
+// Regexp_ex4 =
+//   (Expmatch.mapp
+//     [1]
+//     (Regexp.chr 1)
+//     (Expmatch.mchar 1)
+//     [2, 3]
+//     (Regexp_of_list [2, 3])
+//     (Expmatch.mapp
+//       [2]
+//       (Regexp.chr 2)
+//       (Expmatch.mchar 2)
+//       [3]
+//       (Regexp_of_list [3])
+//       (Expmatch.mapp
+//         [3]
+//         (Regexp.chr 3)
+//         (Expmatch.mchar 3)
+//         []
+//         (Regexp_of_list [])
+//         (Expmatch.mempty)
+//       )
+//     )
+//   )
+
+Mstar1 <t> <s: Data.List t> <re: Regexp t> (e: Expmatch s re) : Expmatch s (Regexp.star re)  
+Mstar1 t s re e = 
+  let msz = Expmatch.mstarz re
+  let mss = Expmatch.mstarapp  e msz
+  let lst = List_concat s
+  let rwt = Prop.Equal.rewrite lst (x => (Expmatch t x (Regexp.star re))) mss
+  rwt
+
+List_concat <t> (xs: Data.List t)         : Prop.Equal (Data.List.concat xs Data.List.nil) xs
+List_concat t Data.List.nil               = Prop.Equal.refl
+List_concat t (Data.List.cons xs.h xs.t)  = 
+  let ind = List_concat t xs.t
+  let app = Prop.Equal.apply (x => Data.List.cons xs.h x) ind
+  app
+
+
+// List_cons <t> (xs: Data.List t)         : Prop.Equal (Data.List.cons xs Data.List.nil) xs
+// List_cons t Data.List.nil               = Prop.Equal.refl
+// List_cons t (Data.List.cons xs.h xs.t)  =
+  // let ind = List_cons xs.t
+  // let app = Prop.Equal.apply (x => Data.List.cons xs.h x) ind
+  // app
+// empty_is_empty : Not (s =~ EmptySet)
+// empty_is_empty = ?empty_is_empty_rhs
+Empty.is_empty <t> <s: Data.List t> : Prop.Not (Expmatch s Regexp.emptyset)
+// Empty.is_empty t s =
+ // (emp =>
+    // let proof
+ // )
+ // ?
+
+
+
+//
+// empty_is_empty : Not (s =~ EmptySet)
+// empty_is_empty = \contra =>
+//   let proof : Exp_match s EmptySet
+//       proof = contra MEmpty
+//   in absurd proof
+//
+
+Munion 
+  <t> 
+  <s: Data.List t> 
+  <re1:  Regexp t> 
+  <re2:  Regexp t> 
+  (p: Data.Pair (Expmatch s re1) (Expmatch s re2))
+  : Expmatch s (Regexp.union re1 re2)
+// Munion t s re1 re2 (Data.Pair.new fst snd) =
+  // Expmatch.munionl t s [] re1 re2
+  // Expmatch.munionl r1 r2
+
+Fold <x> <y> (f: x -> y -> y) (l: Data.List x) (b: y) : y
+Fold x y f Data.List.nil b = b
+Fold x y f (Data.List.cons xs.h xs.t) b = f xs.h (Fold f xs.t b) 
+
+In <a> (x: a) (xs: Data.List a) : Type
+In a x Data.List.nil = Data.Empty
+In a x (Data.List.cons xs.h xs.t) = (Data.Either (Prop.Equal a x xs.h) (In x xs.t))
+  
+DDl (t: Type): Type
+DDl t= Data.List t
+
+MStar_example_re { Regexp.app (Regexp.star (Regexp.chr 2)) (Regexp.chr 5) }
+
+MStar_example_1 : Expmatch [2, 5] MStar_example_re
+MStar_example_1 = Expmatch.mapp (Expmatch.mstarapp (Expmatch.mchar 2) (Expmatch.mstarz (Regexp.chr 2))) (Expmatch.mchar 5)
+
+MStar_example_2 : Expmatch [5] MStar_example_re
+MStar_example_2 = Expmatch.mapp (Expmatch.mstarz (Regexp.chr 2)) (Expmatch.mchar 5)
+
+MStar_example : Expmatch [2, 5, 5] (Regexp.star MStar_example_re)
+// example_1 and example_2 are generated by "construct_match"
+MStar_example = Expmatch.mstarapp (MStar_example_1) (Expmatch.mstarapp (MStar_example_2) (Expmatch.mstarz MStar_example_re))
+
+MStar_ <t>
+  // [ [2, 2, 5], [5] ]
+  (ss : Data.List (Data.List t))
+  // 2*5
+  (re : Regexp t)
+  // "construct_match" requires us to prove that the element is in the list
+  // for that we either:
+  // - prove it's the head of the list
+  // - or prove it's in the tail
+  (construct_match : (s : Data.List t) -> (i : In s ss) -> Expmatch s re)
+  : Expmatch (Concats ss) (Regexp.star re)
+MStar_ Data.List.nil re construct_match = Expmatch.mstarz re
+MStar_ (Data.List.cons h tail) re construct_match =
+  // proving that the head of the list is in the list
+  let h_eq_h = Prop.Equal.refl :: Prop.Equal h h
+  let head_match = construct_match h (Data.Either.left h_eq_h)
+
+  let prev_matches = (MStar_ tail re
+    // alterred "construct_match" for inner calls
+    // receives the current inner word "s"
+    // receives the proof that "s" is in list "tail"
+    (s => i =>
+      // here instead of proving the head of the list
+      // we're proving it's in the tail of the list
+      construct_match s (Data.Either.right i)
+    )
+  )
+  let total_match = Expmatch.mstarapp head_match prev_matches
+  total_match
+
+InHead <t> <xs: Data.List t> (x: t) : In x (Data.List.cons x xs)
+InHead x = Data.Either.left Prop.Equal.refl
+
+
+Concat <t> (xs: DDl t) : Prop.Equal (Data.List.concat xs []) xs 
+Concat Data.List.nil = Prop.Equal.refl
+Concat (Data.List.cons xs.h xs.t) = 
+  let ind = Concat xs.t
+  let app = Prop.Equal.apply (x => Data.List.cons xs.h x) ind
+  app
+
+Concats <t> (ss: Data.List (Data.List t)) : Data.List t
+Concats t ss = Data.List.foldr [] ((a : Data.List t) => (b : Data.List t) => Data.List.concat a b) ss
+
+
+// re_not_empty : (re : Reg_exp t) -> Bool
+// re_not_empty re = ?re_not_empty_rhs
+Re_not_empty <t> (re: Regexp t)   : Data.Bool
+Re_not_empty t (Regexp.emptyset)  = Data.Bool.false
+Re_not_empty t (Regexp.emptystr)  = Data.Bool.true
+Re_not_empty t (Regexp.chr a)     = Data.Bool.true
+Re_not_empty t (Regexp.app a b)   = Data.Bool.and (Re_not_empty t a)(Re_not_empty t b)
+Re_not_empty t (Regexp.union a b) = Data.Bool.or  (Re_not_empty t a)(Re_not_empty t b)
+Re_not_empty t (Regexp.star a)    = Data.Bool.true 
+
+
+
+// re_not_empty_correct : (s ** s =~ re) <-> re_not_empty re = True
+// re_not_empty_correct = ?re_not_empty_correct_rhs
+Re_not_empty_correct <t> <re: Regexp t> 
+: Equivalence (Data.Sigma (Data.List t) (s => Expmatch s re)) (Prop.Equal (Re_not_empty re) Data.Bool.true)
+Re_not_empty_correct t re = Equivalence.new (x => To_rnec x) (y => Fro_rnec y) 
+
+
+To_rnec 
+  <t> 
+  <re: Regexp t> 
+  (x: (Data.Sigma (Data.List t) (s => (Expmatch s re)))) 
+  : (Prop.Equal (Re_not_empty re) Data.Bool.true) 
+To_rnec t (Regexp.emptyset)   (s)  =
+  Data.Empty.absurd (Data.Bool.false_not_true (To_rnec t (Regexp.emptyset) s))
+To_rnec t (Regexp.emptystr)   (s)  = Prop.Equal.refl
+To_rnec t (Regexp.chr a)      (s)  = Prop.Equal.refl
+To_rnec t (Regexp.app a b)    (s)  =
+  let eq0 = Prop.Equal.refl :: Prop.Equal Data.Bool.true Data.Bool.true
+  let rea = Re_not_empty t a
+  let reb = Re_not_empty t b
+  match Data.Sigma s {
+    new fst snd =>
+      let fst1 = fst
+      let snd1 = snd
+      let unc1 = Unconcat2 snd1
+      match Data.Sigma unc1 {
+        new fst snd =>
+          let fst2 = fst
+          let snd2 = snd
+          let eq4  = Prop.Equal.refl :: Prop.Equal fst fst2
+          match Data.Sigma snd2 {
+            new fst snd =>
+              let fst3 = fst
+              let snd3 = snd
+              let par  = Mapp_extract (snd3) //:: (Data.Pair (Expmatch t fst a) (Expmatch t fst b))  
+              let inda = To_rnec t a (Data.Sigma.new fst3 (Data.Pair.fst par))
+              let eq3  = Prop.Equal.refl :: Prop.Equal fst fst3
+              let par2 = Data.Pair.snd par    //\/ eq3
+              let x4   = Expar2 t fst b
+              let rwt  = Prop.Equal.rewrite eq3 (x => (Expmatch t x b) ) (?) //FIXME: Terminar esse erro
+              let indb = To_rnec t b (Data.Sigma.new fst3 (rwt))
+              let test = Bool.and2 inda indb
+              test
+          }
+      }
+  }
+To_rnec t (Regexp.union a b)  (s)  =
+  match Data.Sigma s {
+    new fst snd =>
+      let fst1  = fst
+      let snd1  = snd
+      let par   = Munion_extract (snd1)
+      let inda  = To_rnec t a (Data.Sigma.new fst1 (Data.Pair.fst par))
+      let indb  = To_rnec t b (Data.Sigma.new fst1 (Data.Pair.snd par))
+      Bool.or2 inda indb
+  }
+To_rnec t (Regexp.star a )    (s)  = Prop.Equal.refl
+
+
+
+Expar2 <t> (fst: Data.List t ) (b: Regexp t) : (Expmatch t fst b)
+// Expar2 t x
+
+
+
+#partial
+Unconcat  
+  <t> 
+  <l1: Data.List t>
+  <l2: Data.List t>
+  <l3: Data.List t>
+  <re1: Regexp t>
+  <re2: Regexp t>
+  (e: Expmatch t (l3) (Regexp.app t re1 re2)) 
+  : Expmatch (Data.List.concat l1 l2) (Regexp.app re1 re2)
+Unconcat t l1 l2 l3 re1 re2 (Expmatch.mapp t_ l1_ l2_ re1_ re2_ a b) = 
+  // let aux    = (Unconcat.aux me)
+  let ind   = (Expmatch.mapp a b)
+  let e0    = Prop.Equal.refl :: Prop.Equal t_ t
+  let e1    = Prop.Equal.refl :: Prop.Equal re1_ re1
+  let e2    = Prop.Equal.refl :: Prop.Equal re2_ re2
+  let rwt1  = Prop.Equal.rewrite e1 (x => (Expmatch t_ (Data.List.concat t_ l1_ l2_) (Regexp.app t x re2_)))  ind
+  let rwt2  = Prop.Equal.rewrite e2 (x => (Expmatch t_ (Data.List.concat t_ l1_ l2_) (Regexp.app t re1 x)))   ind
+// ?
+_
+
+// • Hole : (Expmatch t  (Data.List.concat t  l1  l2)  (Regexp.app t re1  re2))
+// • rwt2 : (Expmatch t_ (Data.List.concat t_ l1_ l2_) (Regexp.app t re1  re2))
+// • ind  : (Expmatch t_ (Data.List.concat t_ l1_ l2_) (Regexp.app t re1_ re2_))
+
+
+#partial
+Unconcat2  
+  <t> 
+  <l: Data.List t>
+  <re1: Regexp t>
+  <re2: Regexp t>
+  (e: Expmatch t (l) (Regexp.app t re1 re2)) 
+  : (Data.Sigma (Data.List t) (l2 => 
+      (Data.Sigma (Data.List t) (l1 => Expmatch (Data.List.concat l1 l2) (Regexp.app re1 re2)))))
+Unconcat2 t l re1 re2 (Expmatch.mapp t_ l1 l2 r1 r2 a b ) = 
+  Data.Sigma.new l2 (Data.Sigma.new l1 (Expmatch.mapp a b))
+
+
+
+// Unconcat.aux
+  // <t>
+  // <l1: Data.List t>
+  // <l2: Data.List t>
+  // <re1: Regexp t>
+  // <re2: Regexp t>
+  // <a: Expmatch l1 re1>
+  // <b: Expmatch l2 re2>
+  // (e1: Expmatch a b)
+  // : Expmatch (Data.List.concat t l1 l2) (Regexp.app t re1 re2)
+
+
+// Prop.Equal.rewrite le (x => (Expmatch t x (Regexp.app t re1 re2))) e
+// ?
+// • Hole: (Expmatch _  (Data.List.concat _ l1 l2)    (Regexp.app _ re1 re2))
+//         (Expmatch t_ (Data.List.concat t_ l1_ l2_) (Regexp.app t re1 re2))
+
+#partial
+Mapp_extract 
+  <t> 
+  <s1: Data.List t> 
+  <s2: Data.List t>
+  <re1: Regexp t>
+  <re2: Regexp t>
+  (m: Expmatch (Data.List.concat t s1 s2) (Regexp.app t re1 re2))
+  : Data.Pair (Expmatch t s1 re1) (Expmatch t s2 re2)
+Mapp_extract (Expmatch.mapp m1 m2) = 
+  Data.Pair.new m1 m2
+
+#partial
+Mapp_extract_
+  <t>
+  <s1: Data.List t>
+  <re1: Regexp t>
+  <re2: Regexp t>
+  (m: Expmatch (Data.List.concat t s1 Data.List.nil) (Regexp.app t re1 re2))
+  : Data.Pair (Expmatch t s1 re1) (Expmatch t Data.List.nil re2)
+// Mapp_extract_ (Expmatch.mapp m1 m2) = ?
+  // Data.Pair.new m1 m2
+//
+  
+
+
+Munion_extract 
+  <t> 
+  <s1: Data.List t> 
+  <s2: Data.List t>
+  <s3: Data.List t>
+  <re1: Regexp t>
+  <re2: Regexp t>
+  // <td : Prop.Equal t d>
+  (m: Expmatch t (s3) (Regexp.union re1 re2))
+  : Data.Pair (Expmatch t s1 re1) (Expmatch t s2 re2)
+
+
+#partial
+Fro_rnec 
+  <t> 
+  <re: Regexp t> 
+  (e : (Prop.Equal (Re_not_empty re) Data.Bool.true)) 
+  : (Data.Sigma (Data.List t) (s => (Expmatch s re))) 
+// Fro_rnec r re e = ?
+Fro_rnec t Regexp.emptyset  e   = Data.Empty.absurd (Data.Bool.false_not_true e)
+Fro_rnec t Regexp.emptystr  e   = Data.Sigma.new [] (Expmatch.mempty)
+Fro_rnec t (Regexp.chr a)   e   = Data.Sigma.new [a](Expmatch.mchar a)
+Fro_rnec t (Regexp.app a b) e   =
+  let inda    = Fro_rnec t a (Bool.and_first e)
+  let indb    = Fro_rnec t b (Bool.and_second e)
+  match Data.Sigma inda {
+    new fst snd => (
+        let snd1 = snd
+        let fst1 = fst
+        match Data.Sigma indb {
+          new fst snd => 
+            let snd2 = snd
+            let fst2 = fst
+            Data.Sigma.new (Data.List.concat fst1 fst2) (Expmatch.mapp snd1 snd2) 
+        }
+      )
+  }
+  Fro_rnec t (Regexp.union a b) e =
+  Data.Bool.if.proof (Re_not_empty t a) (
+    a_not_empty =>
+      let ind = Fro_rnec t a a_not_empty
+      match Data.Sigma ind {
+        new fst snd => $ fst (Expmatch.munionl a b snd)
+      }
+  ) (
+    a_empty =>
+      let b_not_empty = Or_false a_empty e
+      let ind = Fro_rnec t b b_not_empty
+      match Data.Sigma ind {
+        new fst snd => $ fst (Expmatch.munionr a b snd)
+      }
+  )
+
+Main{
+  // "hello word"
+  (List.show (Fold
+  ((x: Data.List Data.U60) => (y: Data.List Data.U60) => Data.List.concat x y)
+  [[1], [2], [3]] [] ))
+  // ( [[1], [2], [3]] )
+}
+
+
+
+
+
+// Nat.equal.proof (n : Data.Nat) (m : Data.Nat) : Prop.Decidable (Prop.Equal n m)
+// Nat.equal.proof Data.Nat.zero Data.Nat.zero = Prop.Decidable.yep Prop.Equal.refl
+// Nat.equal.proof (Data.Nat.succ n) Data.Nat.zero = Prop.Decidable.nop (n_eq_zero =>
+//     let false_eq_true = Prop.Equal.apply(n => Data.Nat.is_zero n) n_eq_zero
+//     Data.Bool.false_not_true false_eq_true)
+// Nat.equal.proof Data.Nat.zero (Data.Nat.succ m) = Prop.Decidable.nop (zero_eq_n =>
+//     let true_eq_false = Prop.Equal.apply(n => Data.Nat.is_zero n) zero_eq_n
+//     Data.Bool.true_not_false true_eq_false)
+// Nat.equal.proof (Data.Nat.succ n) (Data.Nat.succ m) =
+//   let ind = Nat.equal.proof n m
+//   match Prop.Decidable ind {
+//     yep proof => Prop.Decidable.yep (Prop.Equal.apply (x => Data.Nat.succ x) proof)
+//     nop proof => Prop.Decidable.nop (sucn_eq_sucm =>
+//       let n_eq_m = Prop.Equal.apply (x => Data.Nat.pred x) sucn_eq_sucm
+//       proof n_eq_m)
+//   }
+

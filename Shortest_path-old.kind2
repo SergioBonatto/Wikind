@@ -1,0 +1,404 @@
+// -- boilerplate --
+// idxval : ∀ {n : ℕ} → idx n → ℕ
+// idxval Z = 0
+// idxval (S i) = 1 + idxval i
+IdxVal <n : Data.Nat> (idx: Data.Fin n)       : Data.Nat
+IdxVal (Data.Nat.zero)   (idx)                = Data.Nat.zero
+IdxVal (Data.Nat.succ n) (Data.Fin.zero)      = Data.Nat.zero
+IdxVal (Data.Nat.succ n) (Data.Fin.succ idx)  = Data.Nat.succ (IdxVal n idx)
+
+// lemma1 : ∀ (n : ℕ) → n <? S n ≡ [<]
+// lemma1 Z = ↯
+// lemma1 (S n) = lemma1 n
+Lemma1 (n: Data.Nat)      : Prop.Equal (Data.Nat.ltn n (Data.Nat.succ n)) Data.Bool.true
+Lemma1 Data.Nat.zero      = Prop.Equal.refl
+Lemma1 (Data.Nat.succ n)  = Lemma1 n
+
+// lemma2 : ∀ (n : ℕ) → ∀ (i : idx n) → idxval i <? S n ≡ [<]
+// lemma2 (S x) Z = ↯
+// lemma2 (S x) (S i) = lemma2 x i
+// #partial
+Lemma2 <n: Data.Nat> (i: Data.Fin n)        : Prop.Equal (Data.Nat.ltn (IdxVal n i) (Data.Nat.succ n)) Data.Bool.true
+Lemma2 Data.Nat.zero i                      = Data.Empty.absurd (Data.Fin.absurd i)
+Lemma2 (Data.Nat.succ x) Data.Fin.zero      = Prop.Equal.refl
+Lemma2 (Data.Nat.succ x) (Data.Fin.succ i)  = Lemma2 x i
+
+// lemma3 : ∀ (n : ℕ) → ∀ (i : idx n) → idxval i <? n ≡ [<]
+// lemma3 Z ()
+// lemma3 (S n) Z = ↯
+// lemma3 (S n) (S i) = lemma3 n i
+Lemma3 <n: Data.Nat> (i: Data.Fin n)        : Prop.Equal (Data.Nat.ltn (IdxVal n i) n) Data.Bool.true
+Lemma3 Data.Nat.zero i          = Data.Empty.absurd (Data.Fin.absurd i)
+Lemma3 (Data.Nat.succ n) Data.Fin.zero      = Zero_lte_n n
+Lemma3 (Data.Nat.succ n) (Data.Fin.succ i)  = Lemma3 n i
+
+Zero_lte_n (n: Data.Nat)      : Prop.Equal (Data.Nat.lte Data.Nat.zero n) Data.Bool.true
+Zero_lte_n Data.Nat.zero      = Prop.Equal.refl
+Zero_lte_n (Data.Nat.succ n)  = Prop.Equal.refl
+
+// neighbors : ∀ {n : ℕ} → vec[ S n ] 𝔹 → list (idx (S n))
+// neighbors {n} v = neighbors' v (𝕚 n {S n} {{lemma1 n}}) []
+Neighbors 
+  <n: Data.Nat> 
+  (v: Data.Vector Data.Bool (Data.Nat.succ n)) 
+  : Data.List (Data.Fin (Data.Nat.succ n))
+Neighbors Data.Nat.zero v      = Neighbors_                0n v (Data.Fin.zero) (Data.List.nil)
+Neighbors (Data.Nat.succ n) v  = Neighbors_ (Data.Nat.succ n) v (Data.Fin.zero) (Data.List.nil)
+
+//   where
+//   reduce : ∀ {n : ℕ} → idx (S n) → idx (S n)
+//   reduce Z = Z
+//   reduce {n} (S Z) = (𝕚 Z {S n})
+//   reduce {n} (S m) = (𝕚 (idxval m) {S n} {{lemma2 n m}})
+Reduce <n: Data.Nat> (m: Data.Fin (Data.Nat.succ n))  : Data.Fin (Data.Nat.succ n)
+Reduce Data.Nat.zero m                                = m
+Reduce (Data.Nat.succ n) (Data.Fin.zero)              = Data.Fin.zero
+Reduce (Data.Nat.succ n) (Data.Fin.succ m)            = Data.Fin.succ (Reduce n m)
+
+//   neighbors' : ∀ {n : ℕ} → vec[ S n ] 𝔹 → idx (S n) → list (idx (S n)) → list (idx (S n))
+//   neighbors' v Z l with v #[ Z ]
+//   … | I = Z ∷ l
+//   … | O = l
+//   neighbors' {n} v m l with v #[ m ]
+//   … | I = neighbors' v (reduce m) (m ∷ l)
+//   … | O = neighbors' v (reduce m) l
+Neighbors_ 
+  (n: Data.Nat)
+  (v: Data.Vector Data.Bool (Data.Nat.succ n)) 
+  (f: Data.Fin (Data.Nat.succ n)) 
+  (l: Data.List (Data.Fin (Data.Nat.succ n))) 
+  : Data.List (Data.Fin (Data.Nat.succ n))
+Neighbors_ Data.Nat.zero (Data.Vector.cons a b c) Data.Fin.zero l = 
+  Data.Bool.if (b) (Data.List.cons Data.Fin.zero l) l
+Neighbors_ (n) v f l = 
+  let b = Bool.vector n v
+  let c = Neighbors_ n v (Reduce n f) (Data.List.cons f l)
+  let d = Neighbors_ n v (Reduce n f) l
+  Data.Bool.if b c d
+
+#partial
+Bool.vector (n: Data.Nat) (v: Data.Vector Data.Bool (Data.Nat.succ n)) : Data.Bool 
+Bool.vector n (Data.Vector.cons a b c) = b
+
+// lookup : ∀ {n : ℕ} → idx n → list (idx n) → 𝔹
+// lookup x [] = O
+// lookup x (y ∷ ys) with idxval x ≡? idxval y
+// … | I = I
+// … | O = lookup x ys
+Lookup <n: Data.Nat> (x: Data.Fin n) (l: Data.List (Data.Fin n)) : Data.Bool
+Lookup x Data.List.nil = Data.Bool.false
+Lookup x (Data.List.cons (Data.Fin n) y ys) =
+  let b = Data.Nat.equal (IdxVal n x) (IdxVal n y)
+  let c = Lookup n x ys
+  Data.Bool.if b Data.Bool.true c
+
+// filter-list : ∀ {n : ℕ} → list (idx n) → list (idx n) → list (idx n)
+// filter-list [] ys = []
+// filter-list (x ∷ xs) ys with lookup x ys
+// … | I = filter-list xs ys
+// … | O = x ∷ filter-list xs ys
+
+Filter_list <n: Data.Nat> (xs: Data.List (Data.Fin n)) (ys: Data.List (Data.Fin n)) : Data.List (Data.Fin n)
+Filter_list Data.List.nil ys = Data.List.nil
+Filter_list (Data.List.cons (Data.Fin n) x xs) ys =
+  let b = Lookup n x ys
+  let c = Filter_list n xs ys
+  Data.Bool.if b c (Data.List.cons (Data.Fin n) x (Filter_list n xs ys))
+
+
+type Matrix (t: Type) {  
+  nil
+  cons (row: Data.List t) (xs: Matrix t) 
+}
+
+
+List.replicate <t> (n: Data.Nat) (x: t)  : Data.List t
+List.replicate  t  Data.Nat.zero x       = Data.List.nil
+List.replicate  t (Data.Nat.succ n) x    = Data.List.cons x (List.replicate n x)
+
+// Graph.mk is a function that recives two nat, one to rows and other to columns, a type and return a Graph 
+Matrix.create <t> <a> (rows: Data.Nat) (cols: Data.Nat) (v: a)(f: a -> t) : Matrix a
+Matrix.create t a Data.Nat.zero cols v f = Matrix.nil :: Matrix a
+Matrix.create t a (Data.Nat.succ rows) cols v f =
+  let ind = Matrix.create t a rows cols v f
+  let row = List.replicate cols v
+  Matrix.cons row ind 
+
+type Graph {
+  nil
+  new (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60))) 
+} 
+
+// (Data.Pair Data.U60 (Data.Pair Data.U60 Data.U60))
+// Function to add an edge to graph
+Graph.addedge (g: Graph) (p: Data.Pair Data.U60 Data.U60) : Graph
+Graph.addedge Graph.nil p     = Graph.new [(Data.Pair.new (Data.Pair.fst p) ([(Data.Pair.snd p)]))]
+Graph.addedge (Graph.new e) p = Graph.new (Graph.update e p)
+
+Graph.update 
+  (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60)))  
+  (p: Data.Pair Data.U60 Data.U60) 
+  : (Data.List (Data.Pair Data.U60 (Data.List Data.U60)))
+Graph.update Data.List.nil (Data.Pair.new fst snd) = 
+  [(Data.Pair.new fst [snd])]
+Graph.update (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new xs.h xs.t)) xs.t.t) (Data.Pair.new fst snd) = 
+  (Graph.update.godown 
+    (== xs.h fst) 
+    (Data.List.cons (Data.Pair t (Data.List c)) 
+    ((Data.Pair.new xs.h xs.t)) xs.t.t) 
+    (Data.Pair.new fst snd))
+
+Graph.update.godown 
+  (cond: Data.U60) 
+  (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60)))  
+  (p: Data.Pair Data.U60 Data.U60) 
+  : (Data.List (Data.Pair Data.U60 (Data.List Data.U60)))
+Graph.update.godown cond Data.List.nil p = Data.List.nil
+Graph.update.godown 0 (Data.List.cons xs.h xs.t) p = Data.List.cons xs.h (Graph.update xs.t p)   
+Graph.update.godown n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new xs.h xs.t)) xs.t.t) (Data.Pair.new fst snd) = 
+  Data.List.cons (Data.Pair.new xs.h (Data.List.cons snd xs.t)) xs.t.t   
+
+// #partial
+// Graph.addedge (g: Graph) (p: Data.Pair Data.U60 Data.U60) : Graph
+// Graph.addedge (Graph.new e) (Data.Pair.new fst snd) = Graph.new ( Data.List.cons (Data.Pair.new fst (Data.List.cons snd (GetAdjacentVertices fst e))) e)
+//  -- Helper function to get the adjacent vertices of a vertex
+// #partial
+Get.adjacent (n: Data.U60) (g: Graph) : Data.List Data.U60
+Get.adjacent n (Graph.nil) = Data.List.nil
+Get.adjacent n (Graph.new Data.List.nil) = Graph.adjacent.vertices n Data.List.nil
+Get.adjacent n (Graph.new (Data.List.cons xs.h xs.t)) = Graph.adjacent.vertices n (Data.List.cons xs.h xs.t)
+
+// #partial
+Graph.adjacent.vertices 
+  (n: Data.U60) 
+  (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60))) 
+  : Data.List Data.U60
+Graph.adjacent.vertices n (Data.List.nil)  = []
+Graph.adjacent.vertices n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new xs.h xs.t)) xs.t.t) = 
+ if (Data.U60.to_bool (== n xs.h)) {
+  xs.t
+ } else {
+  Graph.adjacent.vertices n xs.t.t
+ }
+
+// {-- BFS Traverse : returns list of nodes ordered by first seen to last --}
+// --------------------------------------------------------------------------
+// {-# TERMINATING #-}
+// bfs-traverse : ∀ {n : ℕ} → graph[ S n ] → idx (S n) → list (idx (S n))
+// bfs-traverse G ι₀ = bfs-traverse' G [ ι₀ ] [] [ ι₀ ]
+Bfs_traverse (n: Data.Nat) (g: Graph) (i: Data.U60) : Data.List Data.U60
+Bfs_traverse n g i = Bfs_traverse_ n g [i] []
+
+//   where
+//   bfs-traverse' :
+//     ∀ {n : ℕ}
+//     → graph[ S n ]                         -- G: graph represented as adjacency matrix
+//     → list (idx (S n)) → list (idx (S n))  -- Q: processing queue, L: search result list
+//     → list (idx (S n))                     -- σ: seen list to avoid cycles
+//     → list (idx (S n))
+Bfs_traverse_ 
+  (n: Data.Nat) 
+  (g: Graph) 
+  (q: Data.List Data.U60) 
+  (s: Data.List Data.U60) 
+  : Data.List Data.U60
+Bfs_traverse_ n g Data.List.nil s = Data.List.reverse s
+Bfs_traverse_ n g (Data.List.cons xs.h xs.t) s =
+  let neighbors = Get.adjacent xs.h g
+  let visited = Data.List.cons xs.h s
+  let new = FilterList (y => NotElem y visited) neighbors
+  let q = Data.List.concat xs.t new
+  Bfs_traverse_ n g q visited
+
+NotElem (t: Data.U60) (l: Data.List Data.U60) : Data.Bool
+NotElem t Data.List.nil = Data.Bool.true
+NotElem t (Data.List.cons xs.h xs.t) = if (Data.U60.to_bool (== t xs.h)) {
+  Data.Bool.false
+} else {
+  NotElem t xs.t
+}
+
+FilterList <t> (f: t -> Data.Bool) (l: Data.List t) : Data.List t 
+FilterList t f Data.List.nil = Data.List.nil
+FilterList t f (Data.List.cons xs.h xs.t) = if (f xs.h) {
+  Data.List.cons xs.h (FilterList f xs.t)
+} else {
+  FilterList f xs.t
+}
+
+
+
+// bfs : ∀ {n : ℕ} → graph[ S n ] → idx (S n) → idx (S n) → list ℕ
+// bfs {n} G ι₀ ι₁ = let prev = bfs' G ι₀ ι₁ [ ι₀ ] [ ι₀ ] (const[vec]< S n > ι₁)
+//                   in return-path prev ι₁ []
+Bfs (g: Graph) (i0: Data.U60) (i1: Data.U60) : Data.List Data.U60
+Bfs g i0 i1 =
+  let prev = Bfs_ g i0 i1 [i0] [i0] (Const i1 Data.Nat.zero)
+  ReturnPath prev i1 []
+
+Const <a> <t> (x: a) (y: t) : a
+Const x y = x
+
+ // return-path : vec[ S n ] (idx (S n)) → idx (S n) → list ℕ → list ℕ
+ //  return-path prev ι res with idxval(prev #[ ι ]) ≡? idxval ι₁
+ //  … | O = return-path prev (prev #[ ι ]) (idxval (prev #[ ι ]) ∷ res)
+ //  … | I with idxval ι₀ ≡? idxval ι₁ | res
+ //  … | O | [] = res                        -- path to node does not exist
+ //  … | O | xs = res ⧺ [ idxval ι₁ ]        -- path found from ι₀ to ι₁
+  // … | I | _ = res ⧺ [ idxval ι₁ ]         -- path found, search for self
+ //
+ReturnPath
+  (n: Data.Nat)
+  (v: Data.Vector (Data.Fin (Data.Nat.succ n)) (Data.Nat.succ n))
+  (l: Data.List Data.Nat)
+  : Data.List Data.Nat
+// ReturnPath n v l =?
+
+// ReturnPath
+  // (prev: Data.List (Data.Pair Data.U60 Data.U60))
+  // (i: Data.U60)
+  // (path: Data.List Data.U60)
+  // : Data.List Data.U60
+
+//   where
+//   update-prevs : ∀ {n : ℕ} → vec[ S n ] (idx (S n)) → idx (S n) → list (idx (S n)) → vec[ S n ] (idx (S n))
+  // update-prevs ρ x [] = ρ
+//   update-prevs {n} ρ x (y ∷ ys) = let i = (𝕚 (idxval x) {(S n)} {{lemma3 (S n) x}})
+//                                   in update-prevs (ρ #[ y ↦ i ]) x ys
+// updatePrevs : (n : Nat) -> Vec (Idx (S n)) (S n) -> Idx (S n) -> List (Idx (S n)) -> Vec (Idx (S n)) (S n)
+// updatePrevs Z ρ x [] = ρ
+// updatePrevs (S k) ρ x (y :: ys) = let i = idxVal x
+//                                   in updatePrevs k (updateAt y i ρ) x ys
+//
+Update_prevs 
+  <n: Data.Nat>
+  (v: Data.Vector (Data.U60) (Data.Nat.succ n))
+  (i: Data.U60)
+  (l: Data.List (Data.U60))
+  : Data.Vector  (Data.Nat.succ n)
+Update_prevs n v i Data.List.nil = v
+Update_prevs n v i (Data.List.cons xs.h xs.t) =
+  let ix = Data.U60.to_nat i
+  Update_prevs n (Data.Vector.update_at ix xs.h v) i xs.t
+  
+  // ?
+#partial
+Data.Vector.update_at 
+  <n: Data.Nat> 
+  (i: Data.Nat) 
+  (x: Data.U60) 
+  (v: Data.Vector Data.U60 (Data.Nat.succ n)) 
+  : Data.Vector (Data.Nat.succ n)
+Data.Vector.update_at Data.Nat.zero i x v = Data.Vector.cons Data.Nat.zero x Data.Vector.nil
+Data.Vector.update_at Data.Nat.zero i x (Data.Vector.cons a v.h v.t) = Data.Vector.cons a x v.t
+// Data.Vector.update_at (Data.Nat.succ n) i x Data.Vector.nil = ?
+Data.Vector.update_at (Data.Nat.succ n) i x (Data.Vector.cons a v.h v.t) =
+  let cond = Data.Nat.equal a i
+  let ind = Data.Vector.update_at n i x v.t
+  if cond {
+    Data.Vector.cons a x v.t
+  } else {
+    Data.Vector.cons a v.h ind
+  }
+
+
+// ?
+
+ 
+  
+ 
+
+
+// IdxVal (i: Data.U60) : Data.Nat
+// IdxVal i = Data.U60.to_nat i
+  
+//   {- Terminates when queue is empty, that is, when all possible neighbors are seen -}
+//   bfs' :
+//     ∀ {n}
+//     → graph[ S n ]                         -- G: graph represented as adjacency matrix
+//     → idx (S n) → idx (S n)                -- ι₀: starting node ID, ι₁: target node ID
+//     → list (idx (S n)) → list (idx (S n))  -- Q: processing queue, σ: seen list
+//     → vec[ S n ] (idx (S n))               -- ρ: previous nodes list, default value is target
+//     → vec[ S n ] (idx (S n))
+// #partial
+Bfs_ 
+  <n: Data.Nat>
+  (g: Graph) 
+  (i1: Data.Fin (Data.Nat.succ n)) 
+  (i2: Data.Fin (Data.Nat.succ n)) 
+  (xs: Data.List Data.U60)
+  (ts: Data.List Data.U60)
+  (v: Data.Vector Data.U60 (Data.Nat.succ n))
+  : Data.Vector (Data.Fin (Data.Nat.succ n)) (Data.Nat.succ n)
+Bfs_ g i1 i2 Data.List.nil ts v = 
+  let idx = IdxVal i2
+  let ind = Data.Vector.update_at idx 0 v
+  ind
+Bfs_ g i1 i2 (Data.List.cons xs.h xs.t) ts v =
+  let xs  = Data.List.cons xs.h xs.t
+  let ind = Bfs_ g i1 i2 xs.t ts v
+  let ys  = FilterList_bfs (x => NotElem x xs.t) (Graph.get xs.h g)
+  match Data.List ys {
+    nil  => Bfs_ g i1 i2 xs.t ts v
+    cons => Bfs_ g i1 i2 (Data.List.concat xs.t ys) (Data.List.concat xs ys) (Update_prevs v xs.h ys)
+  }
+
+Nat.to_fin (n: Data.Nat)  : Data.Fin (Data.Nat.succ n)
+Nat.to_fin Data.Nat.zero  = Data.Fin.zero
+Nat.to_fin (Data.Nat.succ n) = Data.Fin.succ (Nat.to_fin n)
+
+
+FilterList_bfs <t> (f: t -> Data.Bool) (l: Data.List t) : Data.List t
+FilterList_bfs t f Data.List.nil = Data.List.nil
+FilterList_bfs t f (Data.List.cons xs.h xs.t) = 
+  if (f xs.h) {
+    Data.List.cons xs.h (FilterList_bfs f xs.t)  
+  } else {
+    FilterList_bfs f xs.t
+  }
+
+  
+Graph.get (i: Data.U60) (g: Graph)                  : Data.List Data.U60 
+Graph.get i Graph.nil                               = Data.List.nil
+Graph.get i (Graph.new (Data.List.nil))             = Data.List.nil 
+Graph.get i (Graph.new (Data.List.cons xs.h xs.t))  = 
+  let cond = Data.U60.to_bool (== (Data.Pair.fst xs.h) i)
+  let ind = Graph.get i (Graph.new xs.t)
+  if cond {
+    Data.Pair.snd xs.h
+  } else { ind }
+  // ?
+
+
+
+Main {
+  // Data.Vector.create 3n (x => Data.Vector.create 3n (y => (Data.Nat.succ y)))
+  // Matrix.create 3n 3n 1 ((x: Data.U60) => (Data.U60.add 1 x))
+  let lista = [1, 4, 2, 6, 3, 8, 33, 0, 9]
+  // let grafo = Graph.new ()
+  let g= Graph.new []
+  // let g = Graph.new (Data.List.cons (Data.Pair.new 0 lista) (Data.List.nil))
+  let g = Graph.addedge g (Data.Pair.new 0 1)
+  let g = Graph.addedge g (Data.Pair.new 0 2)
+  let g = Graph.addedge g (Data.Pair.new 1 2)
+  let g = Graph.addedge g (Data.Pair.new 2 0)
+  let g = Graph.addedge g (Data.Pair.new 2 3)
+  let g = Graph.addedge g (Data.Pair.new 3 3)
+  // (Bfs_traverse 2n g 1)
+  // Graph.get 2 g
+  // (Data.Vector.create 1n (x => (Data.Nat.to_u60 (Data.Nat.succ x))))
+  (Data.Vector.cons (Data.U60) 0n  (1) (Data.Vector.nil))
+  // g
+}
+
+
+
+// [ (1 [1, 2, 3, 4]) (2,) ()  ]
+
+
+
+
+
+
+
+

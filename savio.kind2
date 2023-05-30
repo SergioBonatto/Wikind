@@ -1,0 +1,408 @@
+
+
+type Graph {
+
+  new (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60)))
+
+}
+
+
+
+// (Data.Pair Data.U60 (Data.Pair Data.U60 Data.U60))
+
+// Function to add an edge to graph
+
+
+
+Graph.addedge (g: Graph) (p: Data.Pair Data.U60 Data.U60) : Graph
+
+Graph.addedge (Graph.new e) p = Graph.new (Graph.updategraph e p)
+
+
+
+Graph.updategraph (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60)))  (p: Data.Pair Data.U60 Data.U60) : (Data.List (Data.Pair Data.U60 (Data.List Data.U60)))
+
+Graph.updategraph Data.List.nil (Data.Pair.new fst snd) = [(Data.Pair.new fst [snd])]
+
+Graph.updategraph (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new head tail)) tail.tail) (Data.Pair.new fst snd) = 
+if (Data.U60.to_bool (== head fst)) {
+  Data.List.cons (Data.Pair.new head (Data.List.cons snd tail)) tail.tail
+} else {
+  Data.List.cons (Data.Pair.new head tail) (Graph.updategraph tail.tail (Data.Pair.new fst snd))  
+}
+
+
+// }
+  
+
+
+
+// Graph.updategraph.godown (== head fst) (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new head tail)) tail.tail) (Data.Pair.new fst snd)
+
+
+
+  // Graph.updategraph.godown (cond: Data.U60) (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60)))  (p: Data.Pair Data.U60 Data.U60) : (Data.List (Data.Pair Data.U60 (Data.List Data.U60)))
+
+  // Graph.updategraph.godown n Data.List.nil p = Data.List.nil
+
+  // Graph.updategraph.godown 0 (Data.List.cons head tail) p = Data.List.cons head (Graph.updategraph tail p)
+
+  // Graph.updategraph.godown n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new head tail)) tail.tail) (Data.Pair.new fst snd) = Data.List.cons (Data.Pair.new head (Data.List.cons snd tail)) tail.tail
+
+
+
+BFS (g: Graph) (init: Data.U60) : Data.List Data.U60
+
+BFS g init = BFS.visit g [init] []
+
+
+
+BFS.visit (g: Graph) (init: Data.List Data.U60) (visit: Data.List Data.U60)  : Data.List Data.U60
+
+BFS.visit g Data.List.nil visit  = Data.List.reverse visit
+
+BFS.visit g (Data.List.cons head tail) visit = 
+
+
+
+// BFS.visit.godown (Data.List.any visit (x => (Data.U60.to_bool (== x head)))) g (Data.List.cons head tail) visit
+
+
+
+let neighbours = (Data.List.filter (Get.adjacent head g) (x => NotElem x (Data.List.cons head visit)))
+
+// let newVisited = Data.List.concat newVisited neighbours
+
+let neighbours = (Data.List.concat tail neighbours)
+
+// newVisited
+
+// neighbours
+
+((BFS.visit g neighbours (Data.List.cons head visit)))
+
+
+
+
+
+//   where
+
+//   bfs-traverse' :
+
+//     ∀ {n : ℕ}
+
+//     → graph[ S n ]                         -- G: graph represented as adjacency matrix
+
+//     → list (idx (S n)) → list (idx (S n))  -- Q: processing queue, L: search result list
+
+//     → list (idx (S n))                     -- σ: seen list to avoid cycles
+
+//     → list (idx (S n))
+
+
+
+NotElem (t: Data.U60) (l: Data.List Data.U60) : Data.Bool
+
+NotElem t Data.List.nil = Data.Bool.true
+
+NotElem t (Data.List.cons xs.h xs.t) = if (Data.U60.to_bool (== t xs.h)) {
+
+  Data.Bool.false
+
+} else {
+
+  NotElem t xs.t
+
+}
+
+// Data.List.has <a> (xs: Data.List a) (cond: a -> Data.Bool) : Data.Bool
+
+// Data.List.has a (Data.List.nil t)            cond = Data.Bool.false
+
+// Data.List.has a (Data.List.cons t head tail) cond = Data.Bool.if (cond head) Data.Bool.true (Data.List.any a tail cond)
+
+
+
+
+
+BFS.visit.godown (cond: Data.Bool) (g: Graph) (init: Data.List Data.U60) (visit: Data.List Data.U60)  : Data.List Data.U60
+
+BFS.visit.godown Data.Bool.true g (Data.List.cons head tail) visit = BFS.visit g [] visit
+
+BFS.visit.godown Data.Bool.false g (Data.List.cons head tail) visit = (BFS.visit g (Data.List.filter (Get.adjacent head g) (y => Data.Bool.not (Data.List.any visit (x => (Data.U60.to_bool (== x head)))))) visit) 
+
+BFS.visit.godown b g (Data.List.nil) visit = []
+
+  // bfs : Int -> Graph -> List Int
+
+  // bfs s (MkGraph edges) = go [s] [s]
+
+  //   where
+
+  //     go : List Int -> List Int -> List Int
+
+  //     go [] visited = reverse visited
+
+  //     go (x :: xs) visited =
+
+  //       let newNodes = filter (\n => notElem n visited) (getAdjacent x edges)
+
+  //           newVisited = visited ++ newNodes
+
+        // in go (xs ++ newNodes) newVisited
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Data.List.filter <a> (xs: Data.List a) (cond: a -> Data.Bool) : Data.List a
+
+ //  -- Function to perform BFS traversal of the graph
+
+ //  bfs : Int -> Graph -> List Int
+
+ //  bfs s (MkGraph edges) = bfs' [s] [] (length edges) where
+
+ //    bfs' : List Int -> List Int -> Int -> List Int
+
+ //    bfs' [] visited _ = reverse visited
+
+ //    bfs' (x :: xs) visited n =
+
+ //      let neighbours = getAdjacentVertices x edges
+
+ //          newVisited = if x `elem` visited then visited else x :: visited
+
+ //          newQueue = xs ++ filter (\v => v `notElem` (x :: visited)) neighbours
+
+ //      in bfs' newQueue newVisited n
+
+
+
+
+
+//  addEdge : (Int, Int) -> Graph -> Graph
+
+//  addEdge (u, v) (MkGraph edges) = MkGraph ((u, v :: getAdjacentVertices u edges) :: edges)
+
+// #partial
+
+// Graph.addedge (g: Graph) (p: Data.Pair Data.U60 Data.U60) : Graph
+
+// Graph.addedge (Graph.new e) (Data.Pair.new fst snd) = Graph.new ( Data.List.cons (Data.Pair.new fst (Data.List.cons snd (GetAdjacentVertices fst e))) e)
+
+//  -- Helper function to get the adjacent vertices of a vertex
+
+
+
+Get.adjacent (n: Data.U60) (g: Graph) : Data.List Data.U60
+
+Get.adjacent n (Graph.new e) = Graph.adjacent.vertices n e
+
+
+
+// #partial
+
+Graph.adjacent.vertices (n: Data.U60) (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60))) : Data.List Data.U60
+
+Graph.adjacent.vertices n (Data.List.nil)  = []
+
+Graph.adjacent.vertices n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new head tail)) tail.tail) = 
+
+ if (Data.U60.to_bool (== n head)) {
+
+  tail
+
+ } else {
+
+  Graph.adjacent.vertices n tail.tail
+
+ }
+
+
+
+// Graph.adjacent.vertices (n: Data.U60) (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60))) : Data.List Data.U60
+
+// Graph.adjacent.vertices n Data.List.nil  = []
+
+// Graph.adjacent.vertices n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new head tail)) tail.tail)= 
+
+//   Graph.adjacent.vertices.godown (== head n) n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new head tail)) tail.tail) 
+
+//   #partial
+
+//   Graph.adjacent.vertices.godown (cond: Data.U60) (n: Data.U60) (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60))) : Data.List Data.U60
+
+//   Graph.adjacent.vertices.godown 0 n (Data.List.cons head tail) = (Graph.adjacent.vertices n tail)   
+
+//   Graph.adjacent.vertices.godown c n (Data.List.cons (Data.Pair t (Data.List x)) ((Data.Pair.new head tail)) tail.tail) = tail   
+
+
+
+type Graphs {
+
+  new (vet: Data.Nat) (edge: Data.Vector (Data.List Data.U60) vet)
+
+}
+
+
+
+
+
+
+
+// -- BFS traversal of a graph
+
+// BFS.of.graph (vertices : Data.Nat) (adj: Data.Vector (Data.List Data.U60) vertices) : Data.List Data.U60
+
+// BFS.of.graph vertices adj = ?
+
+// bfsOfGraph vertices adj =
+
+//   let bfsTraversal : List Nat -> Vect vertices Bool -> List Nat -> List Nat
+
+//       bfsTraversal [] _ result = reverse result
+
+//       bfsTraversal (node :: nodes) visited result =
+
+//         let neighbours = adj ! node
+
+//             newVisited = update visited node True
+
+//             newNodes = nodes ++ filter (\n => not (visited ! n)) neighbours
+
+//         in bfsTraversal newNodes newVisited (node :: result)
+
+//   in bfsTraversal [0] (replicate vertices False) []
+
+
+
+
+
+
+
+
+
+// BFS.traversal (g: Graph) (init: Data.List Data.U60) (visit: Data.List Data.U60) : Data.List Data.U60
+
+// BFS.traversal g Data.List.nil visit = nil
+
+// BFS.traversal g init visit = ?
+
+
+
+
+
+
+
+// Example: (Data.List.any Data.Nat [1,2,3,4,5] (Data.Nat.equal 4)) -> Data.Bool.true
+
+
+
+Main {
+
+  // BinaryTree.key (BinaryTree.set (Data.Nat.to_bits 10n) 1 BinaryTree.Leaf)
+
+  // Binary.isBST (Data.List.to_BinaryTree [1,2,3,4,5,6,888,85,9,10,11,12,13,14,15,16])
+
+  // (Data.List.selectionsort (a => b => Data.U60.to_bool (<= a b)) [13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20,13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20])
+
+  // (Data.List.heapsort (a => b => Data.U60.to_bool (> a b)) [13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20])
+
+  // (Maxheapify.swap [13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20] 5n 2n)
+
+  // let Data.Pair.new (fst = before) (snd = elem1after) = Data.List.split_at [13, 2, 3, 14, 17, 4, 1, 5, 16, 12, 9, 10, 15, 8, 7, 11, 18, 19, 6, 20] 5n
+
+  // let Data.Pair.new fst snd = Data.List.split_at before 1n
+
+  // snd
+
+  let g= Graph.new [] 
+
+  let g = Graph.addedge g (Data.Pair.new 0 1)
+
+  let g = Graph.addedge g (Data.Pair.new 0 2) 
+
+  let g = Graph.addedge g (Data.Pair.new 1 2)
+
+  let g = Graph.addedge g (Data.Pair.new 2 0)
+
+  let g = Graph.addedge g (Data.Pair.new 2 3)
+
+  let g = Graph.addedge g (Data.Pair.new 4 0)
+
+  let h = Get.adjacent 2 g
+
+  // let h = Bfs_traverse g 2
+
+  // let h = BFS g 2
+
+  // let h = BFS g 3
+
+  // let h = BFS g 0
+
+  // let h = BFS g 1
+
+  // let g = Graphs.new 0n Data.Vector.nil 
+
+  // let g = Graphs.new 1n (Data.Vector.cons 0n [1,2] Data.Vector.nil)
+
+  // let g = Graphs.new 2n (Data.Vector.cons 1n [2] (Data.Vector.cons 0n [1,2] Data.Vector.nil))
+
+  let g = Graphs.new 3n (Data.Vector.cons 2n [] (Data.Vector.cons 1n [2] (Data.Vector.cons 0n [1,2] Data.Vector.nil)))
+
+  // let g = Graphs.new 1n (Data.Vector.cons 0n [2] Data.Vector.nil)
+
+
+
+  h
+
+  
+
+  // Data.Vector.create 1n (x => Data.Nat.add 1n x)
+
+  // let m = 2n
+
+  // let n = 1n
+
+  // let ys = Data.List.zip_index [1,2,3,4,5,6]
+
+  // let fold = Data.List.foldr (Data.Pair Data.Nat Data.U60) (Data.List (Data.Pair Data.Nat Data.U60))  [] (x => y => (
+
+  //     let Data.Pair.new fst snd = x
+
+  //   if (Data.Nat.equal n (Data.Pair.fst x)) {
+
+  //     (Data.List.cons (Data.List.index_plus ys m) y)
+
+  //   } else {
+
+  //     if (Data.Nat.equal (Data.Pair.fst x) m) {
+
+  //       (Data.List.cons (Data.List.index_plus ys n) y)
+
+  //     } else {
+
+  //       (Data.List.cons x y)
+
+  //       // [x]
+
+  //     }
+
+  //   }
+
+  //   )) ys
+
+  // let map = Data.List.map fold (x => Data.Pair.new (Data.Nat.to_u60 (Data.Pair.fst x)) (Data.Pair.snd x))
+
+  // map
+
+}

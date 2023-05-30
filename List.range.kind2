@@ -1,0 +1,15 @@
+List.range (n: Data.Nat) (m: Data.Nat)          : Data.List Data.Nat
+List.range Data.Nat.zero  Data.Nat.zero         = Data.List.nil
+List.range (Data.Nat.succ n)  (Data.Nat.succ m) = 
+  let ind = List.range     n m 
+  let eql = Data.Nat.equal n m
+  let ltn = Data.Nat.ltn   n m
+
+  Data.List.cons n (List.range n)
+
+
+
+  // U60.range (start: U60) (stop: U60) (step: U60) : List U60{
+    // U60.if (>= start stop) (List.nil U60) (
+        // List.cons (+ start step) (U60.interval (+ start step) stop step)
+    // )

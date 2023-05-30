@@ -1,0 +1,122 @@
+type Graph {
+  nil
+  new (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60))) 
+} 
+
+// (Data.Pair Data.U60 (Data.Pair Data.U60 Data.U60))
+// Function to add an edge to graph
+Graph.addedge (g: Graph) (p: Data.Pair Data.U60 Data.U60) : Graph
+Graph.addedge Graph.nil p     = Graph.new [(Data.Pair.new (Data.Pair.fst p) ([(Data.Pair.snd p)]))]
+Graph.addedge (Graph.new e) p = Graph.new (Graph.update e p)
+
+Graph.update 
+  (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60)))  
+  (p: Data.Pair Data.U60 Data.U60) 
+  : (Data.List (Data.Pair Data.U60 (Data.List Data.U60)))
+Graph.update Data.List.nil (Data.Pair.new fst snd) = 
+  [(Data.Pair.new fst [snd])]
+Graph.update (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new xs.h xs.t)) xs.t.t) (Data.Pair.new fst snd) = 
+  (Graph.update.godown 
+    (== xs.h fst) 
+    (Data.List.cons (Data.Pair t (Data.List c)) 
+    ((Data.Pair.new xs.h xs.t)) xs.t.t) 
+    (Data.Pair.new fst snd))
+
+Graph.update.godown 
+  (cond: Data.U60) 
+  (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60)))  
+  (p: Data.Pair Data.U60 Data.U60) 
+  : (Data.List (Data.Pair Data.U60 (Data.List Data.U60)))
+Graph.update.godown cond Data.List.nil p = Data.List.nil
+Graph.update.godown 0 (Data.List.cons xs.h xs.t) p = Data.List.cons xs.h (Graph.update xs.t p)   
+Graph.update.godown n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new xs.h xs.t)) xs.t.t) (Data.Pair.new fst snd) = 
+  Data.List.cons (Data.Pair.new xs.h (Data.List.cons snd xs.t)) xs.t.t   
+
+// #partial
+// Graph.addedge (g: Graph) (p: Data.Pair Data.U60 Data.U60) : Graph
+// Graph.addedge (Graph.new e) (Data.Pair.new fst snd) = Graph.new ( Data.List.cons (Data.Pair.new fst (Data.List.cons snd (GetAdjacentVertices fst e))) e)
+//  -- Helper function to get the adjacent vertices of a vertex
+// #partial
+Get.adjacent (n: Data.U60) (g: Graph) : Data.List Data.U60
+Get.adjacent n (Graph.nil) = Data.List.nil
+Get.adjacent n (Graph.new Data.List.nil) = Graph.adjacent.vertices n Data.List.nil
+Get.adjacent n (Graph.new (Data.List.cons xs.h xs.t)) = Graph.adjacent.vertices n (Data.List.cons xs.h xs.t)
+
+// #partial
+Graph.adjacent.vertices 
+  (n: Data.U60) 
+  (edge: Data.List (Data.Pair Data.U60 (Data.List Data.U60))) 
+  : Data.List Data.U60
+Graph.adjacent.vertices n (Data.List.nil)  = []
+Graph.adjacent.vertices n (Data.List.cons (Data.Pair t (Data.List c)) ((Data.Pair.new xs.h xs.t)) xs.t.t) = 
+ if (Data.U60.to_bool (== n xs.h)) {
+  xs.t
+ } else {
+  Graph.adjacent.vertices n xs.t.t
+ }
+
+// {-- BFS Traverse : returns list of nodes ordered by first seen to last --}
+// --------------------------------------------------------------------------
+// {-# TERMINATING #-}
+// bfs-traverse : ∀ {n : ℕ} → graph[ S n ] → idx (S n) → list (idx (S n))
+// bfs-traverse G ι₀ = bfs-traverse' G [ ι₀ ] [] [ ι₀ ]
+Bfs_traverse (n: Data.Nat) (g: Graph) (i: Data.U60) : Data.List Data.U60
+Bfs_traverse n g i = Bfs_traverse_ n g [i] []
+
+//   where
+//   bfs-traverse' :
+//     ∀ {n : ℕ}
+//     → graph[ S n ]                         -- G: graph represented as adjacency matrix
+//     → list (idx (S n)) → list (idx (S n))  -- Q: processing queue, L: search result list
+//     → list (idx (S n))                     -- σ: seen list to avoid cycles
+//     → list (idx (S n))
+Bfs_traverse_ 
+  (n: Data.Nat) 
+  (g: Graph) 
+  (q: Data.List Data.U60) 
+  (s: Data.List Data.U60) 
+  : Data.List Data.U60
+Bfs_traverse_ n g Data.List.nil s = Data.List.reverse s
+Bfs_traverse_ n g (Data.List.cons xs.h xs.t) s =
+  let neighbors = Get.adjacent xs.h g
+  let visited = Data.List.cons xs.h s
+  let new = FilterList (y => NotElem y visited) neighbors
+  let q = Data.List.concat xs.t new
+  Bfs_traverse_ n g q visited
+
+NotElem (t: Data.U60) (l: Data.List Data.U60) : Data.Bool
+NotElem t Data.List.nil = Data.Bool.true
+NotElem t (Data.List.cons xs.h xs.t) = if (Data.U60.to_bool (== t xs.h)) {
+  Data.Bool.false
+} else {
+  NotElem t xs.t
+}
+
+FilterList (f: Data.U60 -> Data.Bool) (l: Data.List Data.U60) : Data.List Data.U60 
+FilterList f Data.List.nil = Data.List.nil
+FilterList f (Data.List.cons xs.h xs.t) = if (f xs.h) {
+  Data.List.cons xs.h (FilterList f xs.t)
+} else {
+  FilterList f xs.t
+}
+
+
+Main {
+  // Data.Vector.create 3n (x => Data.Vector.create 3n (y => (Data.Nat.succ y)))
+  // Matrix.create 3n 3n 1 ((x: Data.U60) => (Data.U60.add 1 x))
+  let lista = [1, 4, 2, 6, 3, 8, 33, 0, 9]
+  // let grafo = Graph.new ()
+  // let g= Graph.new []
+  let g = Graph.new (Data.List.cons (Data.Pair.new 0 lista) (Data.List.nil))
+  let g = Graph.addedge g (Data.Pair.new 0 1)
+  // let g = Graph.addedge g (Data.Pair.new 0 2)
+  // let g = Graph.addedge g (Data.Pair.new 1 2)
+  // let g = Graph.addedge g (Data.Pair.new 2 0)
+  // let g = Graph.addedge g (Data.Pair.new 2 3)
+  // let g = Graph.addedge g (Data.Pair.new 3 3)
+  // (Bfs_traverse 2n g 1)
+  g
+  // g
+}
+
+
